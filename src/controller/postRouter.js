@@ -45,9 +45,10 @@ postRouter.post("/tags", async (req, res) => {
 postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
     //TODO check song title exists in API
     try {
-        await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
+        const reply = await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
         res.status(200).json({
-            message: `Replied to ${req.params.id} successfully`
+            message: `Replied to ${req.params.id} successfully`,
+            Reply: reply
         });
     } catch (err) {
         handleServiceError(err, res);
