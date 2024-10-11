@@ -1,4 +1,4 @@
-const { createPost, createReply, checkLike } = require("../src/services/postService");
+const { createPost, createReply, checkLike, checkTags } = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
 
 jest.mock('../src/repository/postDAO');
@@ -12,7 +12,7 @@ const mockPost1 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: []
+    tags: ["rock", "hip-hop"]
 };
 const mockPost2 = {
     class: "post",
@@ -23,7 +23,7 @@ const mockPost2 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: []
+    tags: ["drill"]
 };
 
 beforeAll(() => {
@@ -87,6 +87,14 @@ beforeAll(() => {
             }
         };
     });
+    postDAO.scanPosts.mockImplementation(async () => {
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            },
+            Items: mockDatabase
+        };
+    });
 });
 
 beforeEach(() => {
@@ -99,6 +107,7 @@ beforeEach(() => {
     postDAO.getPost.mockClear();
     postDAO.sendLike.mockClear();
     postDAO.removeLike.mockClear();
+    postDAO.scanPosts.mockClear();
 });
 
 describe('createPost test', () => {
@@ -175,6 +184,40 @@ describe('checkLike test', () => {
                 }
             }
         });
+        expect(added).toBeTruthy();
+    });
+});
+describe('checkTags test', () => {
+    it('Successful search on rock (inclusive)', async () => {
+        const tag = "rock";
+        let added = false;
+
+        const result = await checkTags(tag, 1);
+        added = (result.length == 1);
+        expect(added).toBeTruthy();
+    });
+    it('Bad search on rap (inclusive)', async () => {
+        const tag = "rap";
+        let added = false;
+
+        const result = await checkTags(tag, 1);
+        added = (result.length == 0)
+        expect(added).toBeTruthy();
+    });
+    it('Bad search on rock (non-inclusive)', async () => {
+        const tag = "rock,rap";
+        let added = false;
+
+        const result = await checkTags(tag, 0);
+        added = (result.length == 0);
+        expect(added).toBeTruthy();
+    });
+    it('Successful search on rock (non-inclusive)', async () => {
+        const tag = "rock,hip-hop";
+        let added = false;
+
+        const result = await checkTags(tag, 0);
+        added = (result.length == 1);
         expect(added).toBeTruthy();
     });
 });

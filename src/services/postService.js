@@ -60,16 +60,32 @@ async function checkTags(tags, inclusive){
         return posts.Items;
     }
     tags = tags.split(',');
-    inclusive = inclusive ? true : false;
     const postSet = new Set();
-    for (const t of posts.Items){
-        for (const i of tags){
-            if (t.tags.includes(i)){
-                postSet.add(t);
+    if (inclusive == 1){
+        for (const post of posts.Items){
+            for (const i of tags){
+                if (post.tags.includes(i)){
+                    postSet.add(post);
+                    break;
+                }
             }
         }
     }
-    return [postSet];
+    else {
+        for (const post of posts.Items){
+            let should = true;
+            for (const i of tags){
+                if (!post.tags.includes(i)){
+                    should = false;
+                    break;
+                }
+            }
+            if (should){
+                postSet.add(post);
+            }
+        }
+    }
+    return [...postSet];
 }
 
 module.exports = {
