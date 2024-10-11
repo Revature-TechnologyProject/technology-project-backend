@@ -1,17 +1,64 @@
 const songDAO = require("../repository/songDAO");
 
 
-async function getSongs(query, type, offset = 0) {
+async function getSongs(query, offset = 0) {
+    const {track, artist, year, genre, album} = query;
+    const error = {status: 400, message: ""};
+    // Only allow type=tracks. It changes the returned object by spotify slighty which breaks stuff 
+    // instead of data.tracks it would become data.artists or data.albums
+    // Since this is the getSongs path, I decided to default to track
+    // We can add endpoints to the other types (album, artist) if we want
 
-    let q = new QBuilder();
-    for (const key in query) {
-        q.addQuery(key, query[key]);
+    if (!track && !artist && !year && !genre && !album) {
+        error.message = "A track, artist, year, album, or genre must be provided through query params";
+        throw error;
     }
-    q = q.build();
+    if (typeof(offset) === "string") {
+        offset = parseInt(offset); // returns NaN if fails
+        if ((!offset && offset !== 0) || offset < 0) {
+            error.message = "Offset must be a non-negative number"
+            throw error;
+        }
+    }
 
-    const {tracks} = await songDAO.getSongs(q, type, offset);
+    const builder = new QBuilder();
+    for (const key in query) {
+        builder.addQuery(key, query[key]);
+    }
+    const q = builder.build();
 
-    const filtered = tracks.items.map((item) => {
+    try {
+        const {tracks} = await songDAO.getSongs(q, offset);
+        const filtered = cleanData(tracks.items);
+    
+        const total = tracks.total - offset;
+        let previous = "";
+        if (offset > 0) {
+            const previousOffset = (offset - (total - (total - tracks.limit)) > 0) ? offset - (total - (total - tracks.limit)) : 0;
+            previous = constructPageURL(query, previousOffset, type);
+        }
+        // There's a bug with spotifies return for tracks.next
+        const nextOffset = tracks.next ? offset + (total - (total - tracks.limit)) : null;
+
+        const next = constructPageURL(query, nextOffset);
+        return {showPrevious: previous, showMore: next, songs: filtered};
+    } catch (err) {
+        console.log(err);
+        // Any error here means something happened with the request to spotify. Default to 502
+        error.status = 502;
+        error.message = "The server was acting as a gateway or proxy and received an invalid response from the upstream server";
+        throw error;
+    }
+}
+
+/**
+ * Cleans up the spotify API data to only contain data we may need
+ * 
+ * @param data 
+ * @returns An object of cleaned data
+ */
+function cleanData(data) {
+    return data.map((item) => {
         const artists = item.artists.map((artist) => {
             return {id: artist.id, name: artist.name, url: artist.external_urls.spotify}
         })
@@ -24,23 +71,22 @@ async function getSongs(query, type, offset = 0) {
             artists
         }
     });
-    const total = tracks.total - offset;
-    let previous = "";
-    if (offset > 0) {
-        let prev = (offset - (total - (total - tracks.limit)) > 0) ? offset - (total - (total - tracks.limit)) : 0;
-        previous = constructNextPageURL(query, prev, type);
-    }
-    offset = tracks.next ? offset + (total - (total - tracks.limit)) : null;
-    const next = constructNextPageURL(query, offset, type);
-    return {showPrevious: previous, showMore: next, songs: filtered};
 }
 
-function constructNextPageURL(query, offset, type) {
+/**
+ *  Creates a url that will jump between paginated results based on the offset
+ * 
+ * @param query The input parameters given by the user
+ * @param offset The offset to start from
+ * @param type The type of query (artist, track, album)
+ * @returns string of the continuation url
+ */
+function constructPageURL(query, offset) {
     if (offset === null) {
         return "";
     }
     // Maybe put the base url in a .env variable
-    let url = `http://localhost:3000/songs?type=${type}`;
+    let url = `http://localhost:3000/songs?type=track`;
     for (const key in query) {
         if (query[key] !== undefined) {
             url += `&${key}=${query[key]}`;
@@ -50,6 +96,9 @@ function constructNextPageURL(query, offset, type) {
     return url;
 }
 
+/**
+ * Used to build a query string for the spotify API
+ */
 class QBuilder {
     constructor() {
         this.q = "";

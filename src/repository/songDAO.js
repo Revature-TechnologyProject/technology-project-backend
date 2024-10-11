@@ -16,7 +16,7 @@ async function getToken() {
       return access_token;
 }
 
-async function getSongs(q, type, offset, retries = 0) {
+async function getSongs(q, offset, retries = 0) {
     if (!token) {
         token = await getToken();
     }
@@ -25,7 +25,7 @@ async function getSongs(q, type, offset, retries = 0) {
         throw {status: 502, message: "Unable to search"}
     }
 
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=${type}&market=US&offset=${offset}`, {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&market=US&offset=${offset}`, {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token },
     });
