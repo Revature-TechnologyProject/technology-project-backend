@@ -3,8 +3,8 @@ const postDAO = require("../repository/postDAO");
 const uuid = require("uuid");
 
 
-async function createPost(userID, text, score, title){
-    const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description: text, score, title, replies: [], likedBy: [], tags: []};
+async function createPost(userID, text, score, title, tags){
+    const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description: text, score, title, replies: [], likedBy: [], tags: tags ? tags.split(',') : []};
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     return post;
@@ -53,9 +53,29 @@ async function checkLike(like, postID, userID){
     return postData;
 }
 
+async function checkTags(tags, inclusive){
+    const posts = await postDAO.scanPosts();
+    throwIfError(posts);
+    if (!tags){
+        return posts.Items;
+    }
+    tags = tags.split(',');
+    inclusive = inclusive ? true : false;
+    const postSet = new Set();
+    for (const t of posts.Items){
+        for (const i of tags){
+            if (t.tags.includes(i)){
+                postSet.add(t);
+            }
+        }
+    }
+    return [postSet];
+}
+
 module.exports = {
     createPost,
     createReply,
     seePosts,
-    checkLike
+    checkLike,
+    checkTags
 };

@@ -10,7 +10,7 @@ const postRouter = express.Router();
 postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     try {
-        await postService.createPost(res.locals.user.itemID, req.body.text, req.body.score, req.body.title);
+        await postService.createPost(res.locals.user.itemID, req.body.text, req.body.score, req.body.title, req.body.tags);
         res.status(200).json({
             message: `Post successfully created`
         });
@@ -30,6 +30,17 @@ postRouter.get("/", async (req, res) => {
         handleServiceError(err, res);
     }
 });
+
+postRouter.post("/tags", async (req, res) => {
+    try {
+        const posts = await postService.checkTags(req.body.tags, req.body.inclusive);
+        res.status(200).json({
+            Posts: posts
+        });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+})
 
 postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
     //TODO check song title exists in API
