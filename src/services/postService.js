@@ -9,8 +9,8 @@ async function createPost(userId, text, score, title){
     return post;
 }
 
-async function getPostById(id) {
-    const getPostResult = await postDAO.getPost(id);
+async function getPostById(postId) {
+    const getPostResult = await postDAO.getPost(postId);
     throwIfError(getPostResult);
     const foundPost = getPostResult.Item;
     if (!foundPost) {
