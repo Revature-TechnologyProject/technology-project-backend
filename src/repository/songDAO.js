@@ -16,7 +16,7 @@ async function getToken() {
       return access_token;
 }
 
-async function getSongs(query, type, offset, retries = 0) {
+async function getSongs(q, type, offset, retries = 0) {
     if (!token) {
         token = await getToken();
     }
@@ -25,17 +25,12 @@ async function getSongs(query, type, offset, retries = 0) {
         throw {status: 502, message: "Unable to search"}
     }
 
-    let q = new buildQ();
-    for (const key in query) {
-        q.addQuery(key, query[key]);
-    }
-    q = q.build();
-
     const response = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=${type}&market=US&offset=${offset}`, {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token },
     });
     const json = await response.json();
+
     if (json.error) {
         const {status} = json.error;
         if (status !== 401) {
@@ -43,64 +38,9 @@ async function getSongs(query, type, offset, retries = 0) {
         }
         // 401 means token expired so retry method after getting a new token
         token = await getToken();
-        return await getSong(retries+1);
+        return await getSongs(q, type, offset, retries + 1);
     }
-    const {tracks} = json;
-    const filtered = tracks.items.map((item) => {
-        const artists = item.artists.map((artist) => {
-            return {id: artist.id, name: artist.name, url: artist.external_urls.spotify}
-        })
-        return {
-            spotifyId: item.id,
-            name: item.name,
-            link: item.external_urls.spotify,
-            popularity: item.popularity,
-            image: item.album.images[1].url,
-            artists
-        }
-    });
-    // const previous = constructNextPageURL(query, offset - limit, type); 
-    // Can maybe return above line to go back to previous search, 
-    // maybe check if offset > limit before having this to ensure there is a previous
-    const total = tracks.total - offset;
-    offset = tracks.next ? offset + (total - (total - tracks.limit)) : null;
-    const next = constructNextPageURL(query, offset, type);
-    return {showMore: next, songs: filtered};
-}
-
-function constructNextPageURL(query, offset, type) {
-    if (offset === null) {
-        return "";
-    }
-    let url = `http://localhost:3000/songs?type=${type}`;
-    for (const key in query) {
-        if (query[key] !== undefined) {
-            url += `&${key}=${query[key]}`;
-        }
-    }
-    url+=`offset=${offset}`;
-    return url;
-}
-
-class buildQ {
-    constructor() {
-        this.q = "";
-    }
-
-    addQuery(key, value) {
-        if (value !== undefined) {
-            if (this.q) {
-                this.q += `+${key}%3A${value}`;
-            } else {
-                this.q += `${key}%3A${value}`
-            }
-        }
-        return this;
-    }
-
-    build() {
-        return this.q;
-    }
+    return json;
 }
 
 module.exports = {getSongs};

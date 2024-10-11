@@ -27,8 +27,8 @@ router.get("/", async (req, res) => {
     }
 
     try {
-        const {showMore, songs} = await getSongs({track, artist, year, genre, album}, type, offset);
-        res.status(200).json({showMore, songs});
+        const result = await getSongs({track, artist, year, genre, album}, type, offset);
+        res.status(200).json(result);
     } catch (err) {
         console.log(err);
         res.status(502).json({message: "The server was acting as a gateway or proxy and received an invalid response from the upstream server"});
