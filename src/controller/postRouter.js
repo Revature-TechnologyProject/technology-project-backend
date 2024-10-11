@@ -44,7 +44,7 @@ postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, 
     }
 });
 
-postRouter.patch("/:id/like", authenticate, postMiddleware.validateLike, async (req, res) => {
+postRouter.patch("/:id/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
     //TODO check song title exists in API
     try {
         await postService.checkLike(req.body.like, req.params.id, res.locals.user.itemID);
