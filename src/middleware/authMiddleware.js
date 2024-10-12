@@ -54,7 +54,7 @@ const replyOwnerOrAdminAuthenticate = async (req, res, next) => {
 
         const foundReply = await postService.getReplyOfPost(postId, replyId);
         if (!(foundReply.postedBy === userId || role === "admin")) {
-            return res.status(400).json({ message: "Unauthorized access - wrong user or not admin" });
+            return res.status(400).json({ message: "Unauthorized access - Wrong User or Not Admin" });
         }
 
         res.locals.user = user;
