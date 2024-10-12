@@ -1,15 +1,26 @@
-const { throwIfError } = require('../utilities/dynamoUtilities');
+const { throwIfError, CLASS_POST } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
 const uuid = require("uuid");
 
-async function createPost(userId, text, score, title){
-    const post = {class: "post", itemID: uuid.v4(), postedBy: userId, description: text, score, title, replies: []};
+const createPost = async (userId, text, score, title) => {
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description: text, score, title, replies: [] };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     return post;
 }
 
-async function getPostById(postId) {
+const createReply = async (userId, postId, text) => {
+    const post = await postDAO.getPost(postId);
+    if (!post.Item) {
+        throw {status: 400, message: "That post doesn't exist"};
+    }
+    const reply = [{ itemID: uuid.v4(), postedBy: userId, description: text }];
+    const data = await postDAO.sendReply(postId, reply);
+    throwIfError(data);
+    return reply;
+}
+
+const getPostById = async (postId) => {
     const getPostResult = await postDAO.getPost(postId);
     throwIfError(getPostResult);
     const foundPost = getPostResult.Item;
@@ -22,24 +33,13 @@ async function getPostById(postId) {
     return foundPost;
 }
 
-async function seePosts(){
+const seePosts = async () => {
     const posts = await postDAO.scanPosts();
     throwIfError(posts);
     return posts.Items;
 }
 
-async function createReply(userId, postId, text){
-    const post = await postDAO.getPost(postId);
-    if (!post.Item) {
-        throw {status: 400, message: "That post doesn't exist"};
-    }
-    const reply = [{ itemID: uuid.v4(), postedBy: userId, description: text }];
-    const data = await postDAO.sendReply(postId, reply);
-    throwIfError(data);
-    return reply;
-}
-
-async function getReply(postId, replyId) {
+const getReplyOfPost = async (postId, replyId) => {
     const repliesOfPost = await getRepliesOfPost(postId);
     const foundReply = repliesOfPost.find((reply) => reply.itemID === replyId);
     if (!foundReply) {
@@ -48,19 +48,19 @@ async function getReply(postId, replyId) {
     return foundReply;
 }
 
-async function getRepliesOfPost(postId) {
+const getRepliesOfPost = async (postId) => {
     const foundPost = await getPostById(postId);
     return foundPost.replies;
 }
 
-async function deletePost(postId) {
+const deletePost = async (postId) => {
     await getPostById(postId);
 
     const deleteResult = await postDAO.deletePost(postId);
     throwIfError(deleteResult);
 }
 
-async function deleteReply(postId, replyId) {
+const deleteReply = async (postId, replyId) => {
     const repliesOfPost = await getRepliesOfPost(postId);
     
     const index = repliesOfPost.findIndex((reply) => reply.itemID === replyId);
@@ -75,10 +75,10 @@ async function deleteReply(postId, replyId) {
 
 module.exports = {
     createPost,
-    seePosts,
-    getPostById,
     createReply,
-    getReply,
+    getPostById,
+    seePosts,
+    getReplyOfPost,
     deletePost,
     deleteReply
 };
