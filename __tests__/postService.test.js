@@ -1,10 +1,11 @@
 const postService = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
+const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
 
 jest.mock('../src/repository/postDAO');
 let mockDatabase = [];
 const mockPost1 = {
-    class: "post",
+    class: CLASS_POST,
     itemID: "e7b1998e-77d3-4cad-9955-f20135d840d0",
     postedBy: "user_1",
     description: "Hello world",
@@ -13,7 +14,7 @@ const mockPost1 = {
     replies: []
 };
 const mockPost2 = {
-    class: "post",
+    class: CLASS_POST,
     itemID: "29ee2056-c74e-4537-ac95-6234a2506426",
     postedBy: "user_2",
     description: "This is a great song",
@@ -102,7 +103,7 @@ describe('createPost test', () => {
         const response = await postService.createPost(userId, text, score, title);
         let added = false;
         mockDatabase.forEach((post) => {
-            if (post.class === "post" && post.postedBy === userId && post.description === text && post.score === score && post.title === title && post.replies.length === 0) {
+            if (post.class === CLASS_POST && post.postedBy === userId && post.description === text && post.score === score && post.title === title && post.replies.length === 0) {
                 added = true;
             }
         });
