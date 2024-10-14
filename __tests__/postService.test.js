@@ -42,20 +42,18 @@ beforeAll(() => {
                     },
                     Item: mockDatabase[i]
                 };
-            } else {
-                return {
-                    $metadata: {
-                        httpStatusCode: 400
-                    }
-                };
-            }
+            } 
         }
-        return false;
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            }
+        };
     });
     postDAO.sendReply.mockImplementation(async (reply, id) => {
         for (let i = 0; i < mockDatabase.length; i++) {
             if (mockDatabase[i].itemID == id) {
-                mockDatabase[i].replies.push(reply);
+                mockDatabase[i].replies.push(reply[0]);
                 return {
                     $metadata: {
                         httpStatusCode: 200
@@ -151,7 +149,7 @@ describe('getPostById', () => {
     it('Throws if post not found', async () => {
         const id = "FakeID";
         let error;
-        const expectedStatus = 500;
+        const expectedStatus = 400;
 
         try {
             await getPostById(id);
@@ -199,13 +197,13 @@ describe('updatePost test', () => {
 describe('deletePost test', () => {
     it('Successful delete post', async () => {
         const id = mockPost1.itemID;
-        const expectedStatus = 400;
+        const expectedStatus = 200;
         const expectedPosts = mockDatabase.length - 1;
 
         await deletePost(id);
-        const statusCode = (await postDAO.getPost(id)).$metadata.httpStatusCode;
+        const response = (await postDAO.getPost(id));
 
-        expect(statusCode).toEqual(expectedStatus);
+        expect(response.Item).toBeFalsy();
         expect(mockDatabase.length).toEqual(expectedPosts);
     });
 });

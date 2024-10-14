@@ -56,6 +56,8 @@ const updateRole = async (id, role) => {
             ":role": role
         }
     });
+    const response = await runCommand(command);
+    return response;
 }
 
 async function updateUser(userId, requestBody) {

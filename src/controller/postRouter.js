@@ -7,7 +7,7 @@ const { validateTextBody, validateScore, validateTitle } = require('../middlewar
 
 const postRouter = express.Router();
 
-postRouter.post("/", authenticate, validateTitle(), validateTextBody(), validateScore(), async (req, res) => {
+postRouter.post("/", authenticate(), validateTitle(), validateTextBody(), validateScore(), async (req, res) => {
     //TODO check song title exists in API
     const { text, score, title } = req.body;
 
@@ -33,7 +33,7 @@ postRouter.get("/", async (req, res) => {
     }
 });
 
-postRouter.patch("/replies", authenticate, validateTextBody(), async (req, res) => {
+postRouter.patch("/replies", authenticate(), validateTextBody(), async (req, res) => {
     //TODO check song title exists in API
     const { text, id } = req.body;
 
@@ -47,7 +47,7 @@ postRouter.patch("/replies", authenticate, validateTextBody(), async (req, res) 
     }
 });
 
-postRouter.patch("/:postId", postOwnerAuthenticate, validateTitle(false), validateScore(false), validateTextBody(false),
+postRouter.patch("/:postId", postOwnerAuthenticate(), validateTitle(false), validateScore(false), validateTextBody(false),
     async (req, res) => {
         const postId = req.params.postId;
         const { title, score, description } = req.body;
@@ -61,7 +61,7 @@ postRouter.patch("/:postId", postOwnerAuthenticate, validateTitle(false), valida
     }
 );
 
-postRouter.delete("/:postId", postOwnerAuthenticate, async (req, res) => {
+postRouter.delete("/:postId", postOwnerAuthenticate(), async (req, res) => {
     const postId = req.params.postId;
 
     try {

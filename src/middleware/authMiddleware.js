@@ -2,87 +2,51 @@ const jwt = require("jsonwebtoken");
 const { getPostById } = require("../services/postService");
 const { getUserByUsername } = require("../services/userService");
 
-const authenticate = (req, res, next) => {
-    const token = getToken(req);
-    if (!token) {
-        return res.status(401).json("Unauthorized Access");
-    }
-
-    try {
-        const user = jwt.verify(token, process.env.JWT_SECRET);
-        res.locals.user = user;
-        next();
-    } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
-    }
+const authenticate = () => {
+    return isAuthorized(() => true, "");
 };
 
-const accountOwnerAuthenticate = async (req, res, next) => {
-    const token = getToken(req);
-    if (!token) {
-        return res.status(401).json("Unauthorized Access");
-    }
-
-    try {
-        const user = jwt.verify(token, process.env.JWT_SECRET);
-
+const accountOwnerAuthenticate = () => {
+    return isAuthorized((user, req) => {
         const userId = req.params.userId;
-        if (userId !== user.itemID) {
-            return res.status(401).json("Unauthorized Access - Wrong User");
-        }
-
-        res.locals.user = user;
-        next();
-    } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
-    }
+        return userId === user.itemID;
+    }, "Unauthorized Access - Wrong User");
 };
 
-const postOwnerAuthenticate = async (req, res, next) => {
-    const token = getToken(req);
-    if (!token) {
-        return res.status(401).json("Unauthorized Access");
-    }
-
-    try {
-        const user = jwt.verify(token, process.env.JWT_SECRET);
-
+const postOwnerAuthenticate = () => {
+    return isAuthorized(async (user, req) => {
         const postId = req.params.postId;
-        let userId;
+        const post = await getPostById(postId);
+        const postOwner = await getUserByUsername(post.postedBy);
+    
+        return postOwner.itemID === user.itemID;
+    }, "Unauthorized Access - Wrong User");
+};
+
+const adminAuthenticate = () => {
+    return isAuthorized((user) => user.role === "admin", "Privilege too low");
+};
+
+function isAuthorized(isAuthorizedCalledback, onFailMessage) {
+    return async (req, res, next) => {
+        const token = getToken(req);
+        if (!token) {
+            return res.status(401).json("Unauthorized Access");
+        }
+
         try {
-            const post = await getPostById(postId);
-            userId = (await getUserByUsername(post.postedBy)).itemID;
+            const user = jwt.verify(token, process.env.JWT_SECRET);
+            const isAuthorized = await isAuthorizedCalledback(user, req);
+            if (!isAuthorized) {
+                return res.status(401).json({ message: onFailMessage });
+            }
+            res.locals.user = user;
+            next();
         } catch (err) {
-            return res.status(err.status).json({ message: err.message });
+            return res.status(401).json("Unauthorized Access, try relogging");
         }
-        if (userId !== user.itemID) {
-            return res.status(401).json("Unauthorized Access - Wrong User");
-        }
-
-        res.locals.user = user;
-        next();
-    } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
-    }
-};
-
-const adminAuthenticate = (req, res, next) => {
-    const token = getToken(req);
-    if (!token) {
-        return res.status(401).json("Unauthorized Access");
-    }
-
-    try {
-        const user = jwt.verify(token, process.env.JWT_SECRET);
-        if (user.role !== "admin") {
-            return res.status(401).json({ message: "Privilege too low" });
-        }
-        res.locals.user = user;
-        next();
-    } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
-    }
-};
+    };
+}
 
 function getToken(req) {
     const token = req.headers?.authorization && req.headers.authorization.split(" ")[1];

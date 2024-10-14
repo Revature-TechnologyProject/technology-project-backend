@@ -34,7 +34,7 @@ userRouter.post("/login", validateUsername(), validatePassword(), async (req, re
     }
 });
 
-userRouter.put("/:userId", authenticate, async (req, res) => {
+userRouter.put("/:userId", authenticate(), async (req, res) => {
     const userId = req.params.userId;
     const requestBody = req.body;
 
@@ -50,7 +50,7 @@ userRouter.put("/:userId", authenticate, async (req, res) => {
     }
 });
 
-userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
+userRouter.delete("/:id", adminAuthenticate(), async (req, res) => {
     const { id } = req.params;
     try {
         await userService.deleteUser(id);
@@ -60,11 +60,11 @@ userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
     }
 });
 
-userRouter.patch("/:id/role", adminAuthenticate, validateRole(), async (req, res) => {
+userRouter.patch("/:id/role", adminAuthenticate(), validateRole(), async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     try {
-        await updateRole(id, role);
+        await userService.updateRole(id, role);
         return res.status(200).json({ message: `User role changed to ${role}` });
     } catch (err) {
         handleServiceError(err, res);
