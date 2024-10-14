@@ -6,7 +6,15 @@ const postMiddleware = require('../middleware/postMiddleware');
 
 const postRouter = express.Router();
 
-
+/**
+ * Creates a new post in the database
+ * Request Body
+ *      title {string}
+ *      score {number}
+ *      text {string}
+ * Response
+ *      200 - Post successfully created
+ */
 postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     try {
@@ -19,18 +27,33 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
     }
 });
 
+/**
+ * Get all posts
+ * Response
+ *      200
+ *          posts - Array of retrieved posts
+ */
 postRouter.get("/", async (req, res) => {
     //TODO check song title exists in API
     try {
         const posts = await postService.seePosts();
         res.status(200).json({
-            Posts: posts
+            posts: posts
         });
     } catch (err) {
         handleServiceError(err, res);
     }
 });
 
+/**
+ * Add a reply to an existing post
+ * Request Body
+ *      id {string}
+ *      text {string}
+ * Response
+ *      200 - Reply successfully created
+ *      400 - That post doesn't exist
+ */
 postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
     //TODO check song title exists in API
     try {
