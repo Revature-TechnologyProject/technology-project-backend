@@ -1,31 +1,33 @@
 const bcrypt = require('bcrypt');
 const uuid = require("uuid");
-const jwt = require("jsonwebtoken");
-const userDAO  = require('../repository/userDAO');
+const jwt = require('jsonwebtoken');
+const userDAO = require('../repository/userDAO');
 const { throwIfError } = require('../utilities/dynamoUtilities');
 
-async function register(username, password) {
+const register = async (username, password) => {
     const rounds = 10;
     password = bcrypt.hashSync(password, rounds);
 
     const userExists = (await userDAO.queryByUsername(username)).Count;
     if (userExists) {
-        throw {status: 400, message: "Username already taken"};
+        throw { status: 400, message: "Username already taken" };
     }
     const user = {
         class: "user",
         itemID: uuid.v4(),
         username,
         password,
-        role: "user"
+        role: "user",
+        bio: "",
+        genres: []
     }
     const result = await userDAO.putUser(user);
     throwIfError(result);
-    delete(user.password);
+    delete (user.password);
     return user;
 }
 
-async function login(username, password) {
+const login = async (username, password) => {
     const result = await userDAO.queryByUsername(username);
     throwIfError(result);
     const user = result.Items[0];
@@ -35,15 +37,70 @@ async function login(username, password) {
 
     throw {
         status: 400,
-        message: "Invalid username/password"
+        message: "Invalid username or password"
     }
 }
 
-async function getUserByUsername(username) {
-    const result = await userDAO.queryByUsername(username);
+const updateRole = async (id, role) => {
+    const getUserResult = await userDAO.getUserById(id);
+    throwIfError(getUserResult);
+    const foundUser = getUserResult.Item;
+    if (!foundUser) {
+        throw {
+            status: 400,
+            message: `User with id ${id} not found`
+        }
+    }
+
+    const currentRole = foundUser.role;
+    if (currentRole === role) {
+        throw {
+            status: 400,
+            message: `User is already role ${role}`
+        }
+    } else if (role !== "admin") {
+        throw {
+            status: 400,
+            message: "Cannot demote admin, use AWS console instead"
+        }
+    }
+
+    const updateResult = await userDAO.updateRole(id, role);
+    throwIfError(updateResult);
+    return updateResult;
+}
+
+async function getUserById(userId) {
+    const result = await userDAO.getUserById(userId);
     throwIfError(result);
     const foundUser = result?.Item;
     return foundUser;
+}
+
+async function updateUser(userId, requestBody) {
+    const foundUser = await getUserById(userId);
+
+    if (!foundUser) {
+        throw {
+            status: 400,
+            message: `User with id ${userId} not found`
+        }
+    }
+
+    if (!requestBody.username) {
+        requestBody.username = foundUser.username;
+    }
+    if (!requestBody.bio) {
+        requestBody.bio = foundUser.bio //? foundUser.bio : "";
+    }
+    if (!requestBody.genres) {
+        requestBody.genres = foundUser.genres //? foundUser.genres : [];
+    }
+
+    const result = await userDAO.updateUser(userId, requestBody);
+    throwIfError(result);
+    const updatedUser = result?.Attributes;
+    return updatedUser;
 }
 
 const deleteUser = async (id) => {
@@ -53,15 +110,16 @@ const deleteUser = async (id) => {
 
 function createToken(user) {
     // Delete unneccesarry attributes as needed here
-    delete(user.password);
+    delete (user.password);
 
-    const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: "1d"});
+    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1d" });
     return token;
 }
 
 module.exports = {
     register,
     login,
-    getUserByUsername,
+    updateRole,
+    updateUser,
     deleteUser
 };
