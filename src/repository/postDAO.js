@@ -14,7 +14,7 @@ const sendReply = async (postId, reply) => {
         TableName: TableName,
         Key: { "class": CLASS_POST, "itemID": postId },
         ExpressionAttributeValues: {
-            ":reply": reply
+            ":reply": [reply]
         },
         UpdateExpression: "SET replies = list_append(replies, :reply)",
         ReturnValues: "UPDATED_NEW"
@@ -45,6 +45,29 @@ const getPost = async (postId) => {
     return await runCommand(command);
 }
 
+async function sendLike(like, id){
+    const command = new UpdateCommand({
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
+        ExpressionAttributeValues: {
+            ":r": [like]
+        },
+        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+}
+
+async function removeLike(index, id){
+    const command = new UpdateCommand({
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
+        UpdateExpression: "REMOVE likedBy["+index+"]",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+}
+
 const updateReplies = async (postId, replies) => {
     const command = new UpdateCommand({
         TableName: TableName,
@@ -71,8 +94,8 @@ module.exports = {
     sendReply,
     scanPosts,
     getPost,
-    updateReplies,
-    deletePost,
     sendLike,
-    removeLike
+    removeLike,
+    updateReplies,
+    deletePost
 };

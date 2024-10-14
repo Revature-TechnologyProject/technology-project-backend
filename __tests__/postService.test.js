@@ -26,7 +26,7 @@ const mockPost2 = {
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
-    postedBy: "user_2",
+    postedBy: mockPost2.itemID,
     description: "Hello there"
 }
 
@@ -57,14 +57,17 @@ beforeAll(() => {
             },
         };
     });
-    postDAO.sendReply.mockImplementation(async (reply, id) => {
-        const post = await postDAO.getPost(id);
-        post.Item.replies.push(reply);
-        return {
-            $metadata: {
-                httpStatusCode: 200
+    postDAO.sendReply.mockImplementation(async (postId, reply) => {
+        for (let i = 0; i < mockDatabase.length; i++){
+            if (mockDatabase[i].itemID === postId){
+                mockDatabase[i].replies.push(reply);
+                return {
+                    $metadata: {
+                        httpStatusCode: 201
+                    }
+                };
             }
-        };
+        }
     });
     postDAO.sendLike.mockImplementation(async (like, id) =>{
         const post = await postDAO.getPost(id);
@@ -96,6 +99,18 @@ beforeAll(() => {
             }
         };
     });
+    postDAO.updateReplies.mockImplementation(async (postId, replies) => {
+        for (let i = 0; i < mockDatabase.length; i++) {
+            if (mockDatabase[i].itemID === postId) {
+                mockDatabase[i].replies = replies;
+                return {
+                    $metadata: {
+                        httpStatusCode: 200
+                    }
+                };
+            }
+        }
+    }); 
 });
 
 beforeEach(() => {
@@ -108,20 +123,18 @@ beforeEach(() => {
     postDAO.getPost.mockClear();
     postDAO.sendLike.mockClear();
     postDAO.removeLike.mockClear();
-    postDAO.getPost.mockClear();
-    postDAO.sendReply.mockClear();
     postDAO.updateReplies.mockClear();
 });
 
 describe('createPost test', () => {
     
     it('Successful post creation', async () => {
-        const id = "95db201c-35bb-47d6-8634-8701a01f496a";
+        const userId = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
         const title = "Hello";
 
-        const response = await postService.createPost(userId, text, score, title);
+        await postService.createPost(userId, text, score, title);
         let added = false;
         mockDatabase.forEach((post) => {
             if (post.class === CLASS_POST && post.postedBy === userId && post.description === text && post.score === score && post.title === title && post.replies.length === 0) {
@@ -135,14 +148,14 @@ describe('createPost test', () => {
 describe('createReply test', () => {
     
     it('Successful reply creation', async () => {
-        const userId = "user_1";
-        const postId = "e7b1998e-77d3-4cad-9955-f20135d840d0";
+        const userId = "6d737a3b-d543-459b-aca6-d1f04952bf30";
+        const postId = mockPost1.itemID;
         const text = "I agree";
 
-        const response = await postService.createReply(userId, postId, text);
+        await postService.createReply(userId, postId, text);
         let added = false;
         mockDatabase.forEach((post) => {
-            if(post.itemID === postId && post.replies.length === 1) {
+            if (post.itemID === postId && post.replies.length > 0) {
                 added = true;
             }
         });
@@ -156,7 +169,7 @@ describe('checkLike test', () => {
         const like = 1;
         const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
 
-        await checkLike(like, id, userID);
+        await postService.checkLike(like, id, userID);
         let added = false;
         mockDatabase.forEach((post) => {
             if (post.itemID == id){
@@ -174,7 +187,7 @@ describe('checkLike test', () => {
         const like = -1;
         const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
 
-        await checkLike(like, id, userID);
+        await postService.checkLike(like, id, userID);
         let added = false;
         mockDatabase.forEach((post) => {
             if (post.itemID == id){
@@ -197,9 +210,9 @@ describe('Delete reply tests', () => {
 
     it('Successful reply deletion', async () => {
         mockDatabase[0].replies.push(mockReply1);
-
-        const postId = "e7b1998e-77d3-4cad-9955-f20135d840d0";
-        const replyId = "f2194fa8-afab-4ed0-9904-2d5af3142aff";
+        
+        const postId = mockPost1.itemID;
+        const replyId = mockReply1.itemID;
 
         await postService.deleteReply(postId, replyId);
         let isDeleted = true;
@@ -217,7 +230,7 @@ describe('Delete reply tests', () => {
 
     it('Throws error when post is not found', async () => {
         const postId = "invalid_postId";
-        const replyId = "f2194fa8-afab-4ed0-9904-2d5af3142aff";
+        const replyId = mockReply1.itemID;
 
         let error;
         try {
@@ -229,7 +242,7 @@ describe('Delete reply tests', () => {
     });
 
     it('Throws error when reply is not found', async () => {
-        const postId = "e7b1998e-77d3-4cad-9955-f20135d840d0";
+        const postId = mockPost1.itemID;
         const replyId = "invalid_replyId";
 
         let error;

@@ -58,20 +58,7 @@ postRouter.get("/", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
-    //TODO check song title exists in API
-    try {
-        const reply = await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
-        res.status(200).json({
-            message: `Replied to ${req.params.id} successfully`,
-            Reply: reply
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
-postRouter.patch("/:postId/replies", authenticate, validateTextBody, async (req, res) => {
+postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { postId } = req.params;
@@ -80,9 +67,28 @@ postRouter.patch("/:postId/replies", authenticate, validateTextBody, async (req,
     try {
         const createdReply = await postService.createReply(userId, postId, text);
         res.status(200).json({
-            message: "Reply successfully created",
+            message: `Replied to ${req.params.id} successfully`,
             createdReply: createdReply
         });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.patch("/:id/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
+    //TODO check song title exists in API
+    try {
+        await postService.checkLike(req.body.like, req.params.id, res.locals.user.itemID);
+        if (req.body.like == 1){
+            res.status(200).json({
+                message: `Liked post ${req.params.id} successfully`
+            });
+        }
+        else {
+            res.status(200).json({
+                message: `Disliked post ${req.params.id} successfully`
+            });
+        }
     } catch (err) {
         handleServiceError(err, res);
     }

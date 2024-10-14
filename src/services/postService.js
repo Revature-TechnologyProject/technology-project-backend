@@ -3,7 +3,7 @@ const postDAO = require("../repository/postDAO");
 const uuid = require("uuid");
 
 const createPost = async (userId, text, score, title) => {
-    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description: text, score, title, replies: [] };
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description: text, score, title, replies: [], likedBy: [] };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     return post;
@@ -12,9 +12,9 @@ const createPost = async (userId, text, score, title) => {
 const createReply = async (userId, postId, text) => {
     const post = await postDAO.getPost(postId);
     if (!post.Item) {
-        throw {status: 400, message: "That post doesn't exist"};
+        throw { status: 400, message: `Post ${postId} doesn't exist` };
     }
-    const reply = [{ itemID: uuid.v4(), postedBy: userId, description: text }];
+    const reply = { itemID: uuid.v4(), postedBy: userId, description: text };
     const data = await postDAO.sendReply(postId, reply);
     throwIfError(data);
     return reply;
@@ -53,26 +53,6 @@ const getRepliesOfPost = async (postId) => {
     return foundPost.replies;
 }
 
-const deletePost = async (postId) => {
-    await getPostById(postId);
-
-    const deleteResult = await postDAO.deletePost(postId);
-    throwIfError(deleteResult);
-}
-
-const deleteReply = async (postId, replyId) => {
-    const repliesOfPost = await getRepliesOfPost(postId);
-    
-    const index = repliesOfPost.findIndex((reply) => reply.itemID === replyId);
-    if (index === -1) {
-        throw { status: 400, message: "That reply doesn't exist" }
-    }
-    
-    const newReplies = repliesOfPost.filter((reply) => reply.itemID !== replyId); // tried using splice() but for some reason does not work
-    const data = await postDAO.updateReplies(postId, newReplies);
-    throwIfError(data);
-}
-
 async function checkLike(like, postID, userID){
     const userLike = {userID, like};
     const post = await postDAO.getPost(postID);
@@ -99,13 +79,33 @@ async function checkLike(like, postID, userID){
     return postData;
 }
 
+const deletePost = async (postId) => {
+    await getPostById(postId);
+
+    const deleteResult = await postDAO.deletePost(postId);
+    throwIfError(deleteResult);
+}
+
+const deleteReply = async (postId, replyId) => {
+    const repliesOfPost = await getRepliesOfPost(postId);
+    
+    const index = repliesOfPost.findIndex((reply) => reply.itemID === replyId);
+    if (index === -1) {
+        throw { status: 400, message: "That reply doesn't exist" }
+    }
+    
+    const newReplies = repliesOfPost.filter((reply) => reply.itemID !== replyId); // tried using splice() but for some reason does not work
+    const data = await postDAO.updateReplies(postId, newReplies);
+    throwIfError(data);
+}
+
 module.exports = {
     createPost,
     createReply,
     getPostById,
     seePosts,
-    checkLike,
     getReplyOfPost,
+    checkLike,
     deletePost,
     deleteReply
 };
