@@ -14,8 +14,14 @@ function validateTextBody(required = true) {
     return validateBody("text", (text) => isValidString(text), required);
 }
 
+
+function validateLike(required = true) {
+    return validateBody("like", (like) => !isNaN(like) && (like == 1 || like == -1), required);
+}
+
 module.exports = {
     validateTitle,
     validateScore,
-    validateTextBody
+    validateTextBody,
+    validateLike
 }

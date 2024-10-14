@@ -3,7 +3,7 @@ const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilit
 
 const sendPost = async (post) => {
     const command = new PutCommand({
-        TableName: TableName,
+        TableName,
         Item: post
     });
     return await runCommand(command);
@@ -11,10 +11,10 @@ const sendPost = async (post) => {
 
 const sendReply = async (reply, id) => {
     const command = new UpdateCommand({
-        TableName: TableName,
+        TableName,
         Key: { "class": CLASS_POST, "itemID": id },
         ExpressionAttributeValues: {
-            ":reply": reply
+            ":reply": [reply]
         },
         UpdateExpression: "SET replies = list_append(replies, :reply)",
         ReturnValues: "UPDATED_NEW"
@@ -24,7 +24,7 @@ const sendReply = async (reply, id) => {
 
 const scanPosts = async () => {
     const command = new ScanCommand({
-        TableName: TableName,
+        TableName,
         FilterExpression: "#class = :class",
         ExpressionAttributeNames: {
             "#class": "class"
@@ -33,14 +33,36 @@ const scanPosts = async () => {
             ":class": CLASS_POST
         }
     })
-    const response = await runCommand(command);
-    return response;
+    return await runCommand(command);
 };
 
 const getPost = async (id) => {
     const command = new GetCommand({
         TableName,
         Key: { class: CLASS_POST, itemID: id }
+    });
+    return await runCommand(command);
+}
+
+async function sendLike(like, id) {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": id },
+        ExpressionAttributeValues: {
+            ":r": [like]
+        },
+        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+}
+
+async function removeLike(index, id) {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": id },
+        UpdateExpression: "REMOVE likedBy[" + index + "]",
+        ReturnValues: "UPDATED_NEW"
     });
     return await runCommand(command);
 };
@@ -75,5 +97,7 @@ module.exports = {
     getPost,
     scanPosts,
     updatePost,
+    sendLike,
+    removeLike,
     deletePost
 };

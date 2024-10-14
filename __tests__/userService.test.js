@@ -1,7 +1,7 @@
 const uuid = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const { register, login, updateRole, updateUser } = require('../src/services/userService');
+const { register, login, updateRole, updateUser, addLike } = require('../src/services/userService');
 const userDAO = require('../src/repository/userDAO');
 const { CLASS_USER } = require('../src/utilities/dynamoUtilities');
 
@@ -42,7 +42,7 @@ const mockAdmin = {
     itemID: "81aaccf9-8128-49c5-a51c-12841778bf53",
     username: "admin_1",
     password: "password1",
-    role: "admin"
+    role: "admin",
 };
 
 beforeAll(() => {
@@ -110,7 +110,7 @@ beforeAll(() => {
             $metadata: {
                 httpStatusCode: 200
             }
-        };;
+        };
     });
 
     userDAO.updateUser.mockImplementation((id, requestBody) => {
@@ -340,4 +340,5 @@ describe("Change User Role", () => {
 
         expect(error.status).toEqual(400);
     });
+
 });
