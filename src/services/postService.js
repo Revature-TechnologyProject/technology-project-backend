@@ -17,13 +17,10 @@ async function seePosts(){
 }
 
 async function createReply(userID, text, id){
-async function createReply(userID, text, id){
     const post = await postDAO.getPost(id);
     if (!post.Item) {
         throw {status: 400, message: `Post ${id} doesn't exist`};
-        throw {status: 400, message: `Post ${id} doesn't exist`};
     }
-    const reply = {postedBy: userID, description: text, itemID: uuid.v4()};
     const reply = {postedBy: userID, description: text, itemID: uuid.v4()};
     const data = await postDAO.sendReply(reply, id);
     throwIfError(data);
