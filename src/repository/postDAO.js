@@ -11,7 +11,7 @@ const sendPost = async (post) => {
 
 const sendReply = async (postId, reply) => {
     const command = new UpdateCommand({
-        TableName: TableName,
+        TableName,
         Key: { "class": CLASS_POST, "itemID": postId },
         ExpressionAttributeValues: {
             ":reply": [reply]
@@ -70,7 +70,7 @@ async function removeLike(index, id){
 
 const updateReplies = async (postId, replies) => {
     const command = new UpdateCommand({
-        TableName: TableName,
+        TableName,
         Key: { "class": CLASS_POST, "itemID": postId },
         UpdateExpression: "SET replies = :replies",
         ExpressionAttributeValues: {

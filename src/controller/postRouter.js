@@ -67,7 +67,7 @@ postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBo
     try {
         const createdReply = await postService.createReply(userId, postId, text);
         res.status(200).json({
-            message: `Replied to ${req.params.id} successfully`,
+            message: `Replied to ${postId} successfully`,
             createdReply: createdReply
         });
     } catch (err) {
