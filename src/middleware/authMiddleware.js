@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { getPostById } = require("../services/postService");
-const { getUserByUsername } = require("../services/userService");
+const { getUserById } = require("../services/userService");
 
 const authenticate = () => {
     return isAuthorized(() => true, "");
@@ -8,16 +8,16 @@ const authenticate = () => {
 
 const accountOwnerAuthenticate = () => {
     return isAuthorized((user, req) => {
-        const userId = req.params.userId;
+        const userId = req.params.id;
         return userId === user.itemID;
     }, "Unauthorized Access - Wrong User");
 };
 
 const postOwnerAuthenticate = () => {
     return isAuthorized(async (user, req) => {
-        const postId = req.params.postId;
+        const postId = req.params.id;
         const post = await getPostById(postId);
-        const postOwner = await getUserByUsername(post.postedBy);
+        const postOwner = await getUserById(post.postedBy);
     
         return postOwner.itemID === user.itemID;
     }, "Unauthorized Access - Wrong User");

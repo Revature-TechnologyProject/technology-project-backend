@@ -68,16 +68,12 @@ userRouter.post("/login", userMiddleware.validateUsername(), userMiddleware.vali
  *      400 - User with id ${userId} not found
  *      401 - Unauthorized access - wrong user
  */
-userRouter.put("/:userId", authMiddleware.authenticate(), async (req, res) => {
-    const userId = req.params.userId;
+userRouter.put("/:id", authMiddleware.accountOwnerAuthenticate(), async (req, res) => {
+    const { id } = req.params;
     const requestBody = req.body;
 
-    if (userId !== res.locals.user.itemID) {
-        return res.status(401).json("Unauthorized access - wrong user");
-    }
-
     try {
-        const updatedUser = await userService.updateUser(userId, requestBody);
+        const updatedUser = await userService.updateUser(id, requestBody);
         res.status(200).json({message: "User has been updated", updatedUser});
     } catch (err) {
         handleServiceError(err, res);

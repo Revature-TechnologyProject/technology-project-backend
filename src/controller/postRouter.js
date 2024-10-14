@@ -20,7 +20,7 @@ postRouter.post("/", authMiddleware.authenticate(), postMiddleware.validateTextB
     const { text, score, title } = req.body;
 
     try {
-        await postService.createPost(res.locals.user.username, text, score, title);
+        await postService.createPost(res.locals.user.itemID, text, score, title);
         res.status(200).json({
             message: `Post successfully created`
         });
@@ -58,7 +58,8 @@ postRouter.get("/", async (req, res) => {
  */
 postRouter.patch("/:id/replies", authMiddleware.authenticate(), postMiddleware.validateTextBody(), async (req, res) => {
     //TODO check song title exists in API
-    const { text, id } = req.body;
+    const { id } = req.params;
+    const { text } = req.body;
 
     try {
         const reply = await postService.createReply(res.locals.user.itemID, text, id);
@@ -72,7 +73,7 @@ postRouter.patch("/:id/replies", authMiddleware.authenticate(), postMiddleware.v
 });
 
 /**
- * Update an existing post; must be post owner
+ * Update an existing post; request must come from owner of the post
  * Path Parameter
  *      :id {string} - The id of the post being updated
  * Request Body
@@ -86,12 +87,12 @@ postRouter.patch("/:id/replies", authMiddleware.authenticate(), postMiddleware.v
  */
 postRouter.patch("/:id", authMiddleware.postOwnerAuthenticate(), postMiddleware.validateTitle(false), postMiddleware.validateScore(false), postMiddleware.validateTextBody(false),
     async (req, res) => {
-        const postId = req.params.id;
+        const { id } = req.params;
         const { title, score, description } = req.body;
 
         try {
-            await postService.updatePost(postId, title, score, description);
-            return res.status(200).json({ message: "Updated post", data: postId });
+            await postService.updatePost(id, title, score, description);
+            return res.status(200).json({ message: "Updated post", data: id });
         } catch (err) {
             handleServiceError(err, res);
         }
@@ -99,7 +100,7 @@ postRouter.patch("/:id", authMiddleware.postOwnerAuthenticate(), postMiddleware.
 );
 
 /**
- * Delete an existing post; must be post owner
+ * Delete an existing post; request must come from owner of the post
  * Path Parameter
  *      :id {string} - The id of the post being deleted
  * Response
@@ -108,11 +109,11 @@ postRouter.patch("/:id", authMiddleware.postOwnerAuthenticate(), postMiddleware.
  *      400 - Post ${id} not found
  */
 postRouter.delete("/:id", authMiddleware.postOwnerAuthenticate(), async (req, res) => {
-    const postId = req.params.id;
+    const { id } = req.params;
 
     try {
-        await postService.deletePost(postId);
-        return res.status(200).json({ message: "Deleted post", data: postId });
+        await postService.deletePost(id);
+        return res.status(200).json({ message: "Deleted post", data: id });
     } catch (err) {
         handleServiceError(err, res);
     }
