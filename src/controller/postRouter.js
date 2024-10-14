@@ -23,9 +23,79 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
     try {
         const createdPost = await postService.createPost(userId, text, score, title);
         res.status(200).json({
-            message: "Post successfully created",
-            createdPost: createdPost
+            message: `Post successfully created`,
+            post
         });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.patch("/:id", authenticate, async (req, res) => {
+    const {id} = req.params;
+    try {
+        const {Item} = await postService.getPost(id);
+        const post = Item;
+        const {user} = res.locals;
+        if (user.role === "user" && post.postedBy !== user.itemID) {
+            const {flag} = req.body;
+            await postService.updatePostFlag(id, flag);
+            return res.status(200).json({id, updated: {isFlagged: flag}})
+        } else if (user.role === "admin" || post.postedBy === user.itemID) {
+            // Only get updatable fields from the body
+            const {description, title, score} = req.body;
+            let {flag} = req.body;
+            if (flag !== undefined && post.postedBy === user.itemID) {
+                flag = undefined; // Users cannot flag/unflag their own post
+            }
+            const updated = await postService.updatePost(id, post, {description: description, title: title, score: score, isFlagged: flag});
+            return res.status(200).json({id, updated});
+        }
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.get("/:id", async (req, res) => {
+    const {id} = req.params;
+    try {
+        const post = await postService.getPost(id);
+        res.status(200).json(post.Item);
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.patch("/:id", authenticate, async (req, res) => {
+    const {id} = req.params;
+    try {
+        const {Item} = await postService.getPost(id);
+        const post = Item;
+        const {user} = res.locals;
+        if (user.role === "user" && post.postedBy !== user.itemID) {
+            const {flag} = req.body;
+            await postService.updatePostFlag(id, flag);
+            return res.status(200).json({id, updated: {isFlagged: flag}})
+        } else if (user.role === "admin" || post.postedBy === user.itemID) {
+            // Only get updatable fields from the body
+            const {description, title, score} = req.body;
+            let {flag} = req.body;
+            if (flag !== undefined && post.postedBy === user.itemID) {
+                flag = undefined; // Users cannot flag/unflag their own post
+            }
+            const updated = await postService.updatePost(id, post, {description: description, title: title, score: score, isFlagged: flag});
+            return res.status(200).json({id, updated});
+        }
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.get("/:id", async (req, res) => {
+    const {id} = req.params;
+    try {
+        const post = await postService.getPost(id);
+        res.status(200).json(post.Item);
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -38,14 +108,29 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
  *          posts - Array of retrieved posts
  */
 postRouter.get("/", async (req, res) => {
-    //TODO check song title exists in API
-    try {
-        const posts = await postService.seePosts();
-        res.status(200).json({
-            posts: posts
-        });
-    } catch (err) {
-        handleServiceError(err, res);
+    let isFlagged = req.query.isFlagged;
+    if (isFlagged !== undefined) {
+        isFlagged = parseInt(isFlagged);
+        // Since 0 is falsy we need to confirm its not 0
+        if (!isFlagged && isFlagged !== 0) {
+            return res.status(400).json({message: "isFlagged query must be 0 or 1"})
+        }
+        try {
+            const flaggedPost = await postService.getFlaggedPost(isFlagged);
+            return res.status(200).json({flaggedPost});
+        } catch (err) {
+            handleServiceError(err, res);
+        }
+    } else {
+        //TODO check song title exists in API
+        try {
+            const posts = await postService.seePosts();
+            res.status(200).json({
+                posts: posts
+            });
+        } catch (err) {
+            handleServiceError(err, res);
+        }
     }
 });
 

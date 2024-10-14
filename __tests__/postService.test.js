@@ -1,8 +1,11 @@
 const postService = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
 const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
+const uuid = require('uuid');
+const {throwIfError} = require("../src/utilities/dynamoUtilities")
 
 jest.mock('../src/repository/postDAO');
+jest.mock("../src/utilities/dynamoUtilities");
 let mockDatabase = [];
 const mockPost1 = {
     class: CLASS_POST,
@@ -134,16 +137,91 @@ describe('createPost test', () => {
         const score = 69;
         const title = "Hello";
 
-        await postService.createPost(userId, text, score, title);
-        let added = false;
-        mockDatabase.forEach((post) => {
-            if (post.class === CLASS_POST && post.postedBy === userId && post.description === text && post.score === score && post.title === title && post.replies.length === 0) {
-                added = true;
-            }
-        });
-        expect(added).toBeTruthy();
+        const response = await createPost(id, text, score, title);
+        expect(response).toEqual(mockDatabase[mockDatabase.length - 1]);
     });
 });
+
+describe("test suite for updating posts", () => {
+    test("Whether unchanged values are assigned correctly", async () => {
+        const post = {
+            description: "default",
+            title: "default",
+            score: 100,
+            isFlagged: true
+        }
+        // Pulled from req.body
+        const updates = {
+            description: undefined,
+            score: 80,
+            isFlagged: undefined,
+            title: "BOO"
+        }
+        const attributes = await updatePost("filler", post, updates);
+
+        // Merge of post and updates where updates override post where defined and post overrides undefined fields
+        const expected = {
+            description: post.description,
+            title: attributes.title,
+            score: attributes.score,
+            isFlagged: post.isFlagged
+        }
+
+        expect(postDAO.updatePost.mock.calls.length).toBe(1);
+        expect(attributes).toEqual(expected);
+    });
+});
+
+describe("Test suite for flagging posts", () => {
+    test("Valid flagging of a post", async () => {
+        // id can be any string, no checks
+        // retrieved from url param (always a string)
+        const id = "random";
+
+        // flag is checked in controller (postman tests)
+        const flag = 1;
+
+        await updatePostFlag(id, flag);
+
+        // should call the DAO with the same arguments
+        expect(postDAO.updatePostFlag.mock.calls.length).toBe(1);
+        expect(postDAO.updatePostFlag.mock.calls[0][0]).toBe("random");
+        expect(postDAO.updatePostFlag.mock.calls[0][1]).toBe(1);
+    })
+});
+
+describe("test suite for viewing flagged post", () => {
+    test("isFlagged is out of range", async () => {
+        // Type is already checked in router (postman test)
+        const isFlagged = 2;
+
+        postDAO.getFlaggedPost.mockResolvedValue({Items: []});
+
+        let error;
+        try {
+            await getFlaggedPost(isFlagged);
+            error = {status: "Should not have succeeded", message: "Should not have succeeded"};
+        } catch (err) {
+            error = err;
+        }
+        const {status, message} = error;
+        expect(status).toBe(400);
+        expect(message).not.toBe("Should not have succeeded");
+    });
+
+    test("isFlagged Valid", async () => {
+        const isFlagged = 1;
+
+        postDAO.getFlaggedPost.mockResolvedValue({Items: []});
+
+        const flaggedPosts = await getFlaggedPost(isFlagged);
+
+        expect(postDAO.getFlaggedPost.mock.calls.length).toBe(1);
+        expect(postDAO.getFlaggedPost.mock.calls[0][0]).toBe(isFlagged);
+        expect(flaggedPosts).toEqual([]);
+
+    })
+})
 
 describe('createReply test', () => {
     
