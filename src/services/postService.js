@@ -57,8 +57,8 @@ const deletePost = async (id) => {
 
 const checkLike = async (like, postID, userID) => {
     const userLike = { userID, like };
-    const post = await getPostById(id);
-    const likeList = post.Item.likedBy;
+    const post = await getPostById(postID);
+    const likeList = post.likedBy;
     for (let i = 0; i < likeList.length; i++) {
         if (likeList[i].userID == userID) {
             if (likeList[i].like == like) {
