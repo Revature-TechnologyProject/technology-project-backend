@@ -43,6 +43,7 @@ function isAuthorized(isAuthorizedCalledback, onFailMessage) {
             res.locals.user = user;
             next();
         } catch (err) {
+            console.log(err);
             return res.status(401).json("Unauthorized Access, try relogging");
         }
     };

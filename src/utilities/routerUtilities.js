@@ -1,5 +1,3 @@
-const { isValidString } = require('../utilities/stringUtilities');
-
 function handleServiceError(error, res) {
     console.error(error);
 

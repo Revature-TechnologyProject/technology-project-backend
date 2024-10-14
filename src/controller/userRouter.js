@@ -114,7 +114,7 @@ userRouter.delete("/:id", authMiddleware.adminAuthenticate(), async (req, res) =
  *      400 - User is already role ${role}
  *      400 - Cannot demote admin, use AWS console instead
  */
-userRouter.patch("/:id/role", authMiddleware.adminAuthenticate, userMiddleware.validateRole(), async (req, res) => {
+userRouter.patch("/:id/role", authMiddleware.adminAuthenticate(), userMiddleware.validateRole(), async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     try {
