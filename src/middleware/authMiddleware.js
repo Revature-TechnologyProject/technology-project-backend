@@ -28,9 +28,13 @@ const postOwnerOrAdminAuthenticate = async (req, res, next) => {
         const userId = user.itemID;
         const { role } = user;
 
-        const foundPost = await postService.getPostById(postId);
-        if (!(foundPost.postedBy === userId || role === "admin")) {
-            return res.status(401).json("Unauthorized Access - Wrong User or Not Admin");
+        try {
+            const foundPost = await postService.getPostById(postId);
+            if (!(foundPost.postedBy === userId || role === "admin")) {
+                return res.status(401).json("Unauthorized Access - Wrong User or Not Admin");
+            }
+        } catch (err) {
+            return res.status(err.status).json({ message: err.message });
         }
 
         res.locals.user = user;
@@ -52,9 +56,13 @@ const replyOwnerOrAdminAuthenticate = async (req, res, next) => {
         const userId = user.itemID;
         const { role } = user;
 
-        const foundReply = await postService.getReplyOfPost(postId, replyId);
-        if (!(foundReply.postedBy === userId || role === "admin")) {
-            return res.status(400).json({ message: "Unauthorized access - Wrong User or Not Admin" });
+        try {
+            const foundReply = await postService.getReplyOfPost(postId, replyId);
+            if (!(foundReply.postedBy === userId || role === "admin")) {
+                return res.status(400).json("Unauthorized access - Wrong User or Not Admin");
+            }
+        } catch (err) {
+            return res.status(err.status).json({ message: err.message });
         }
 
         res.locals.user = user;
@@ -72,7 +80,7 @@ const adminAuthenticate = (req, res, next) => {
     try {
         const user = jwt.verify(token, process.env.JWT_SECRET);
         if (user.role !== "admin") {
-            return res.status(401).json({message: "Privilege too low"});
+            return res.status(401).json({ message: "Privilege too low" });
         }
         res.locals.user = user;
         next();
