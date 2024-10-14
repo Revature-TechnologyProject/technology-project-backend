@@ -7,6 +7,7 @@ const mockPost1 = {
     class: "post",
     itemID: "e7b1998e-77d3-4cad-9955-f20135d840d0",
     postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
+    postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
     description: "Hello world",
     score: 50,
     title: "Title",
@@ -17,6 +18,7 @@ const mockPost1 = {
 const mockPost2 = {
     class: "post",
     itemID: "29ee2056-c74e-4537-ac95-6234a2506426",
+    postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     description: "This is a great song",
     score: 100,
@@ -49,6 +51,17 @@ beforeAll(() => {
         }
     });
     postDAO.sendReply.mockImplementation(async (reply, id) => {
+        const post = await postDAO.getPost(id);
+        post.Item.replies.push(reply);
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            }
+        };
+    });
+    postDAO.sendLike.mockImplementation(async (like, id) =>{
+        const post = await postDAO.getPost(id);
+        post.Item.likedBy.push(like);
         const post = await postDAO.getPost(id);
         post.Item.replies.push(reply);
         return {
@@ -113,13 +126,16 @@ beforeEach(() => {
 describe('createPost test', () => {
     it('Successful post creation', async () => {
         const id = "95db201c-35bb-47d6-8634-8701a01f496a";
+        const id = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
         const title = "Hello";
 
         await createPost(id, text, score, title);
+        await createPost(id, text, score, title);
         let added = false;
         mockDatabase.forEach((post) => {
+            if (post.class == "post" && post.postedBy == id && post.description == text && post.score == score && post.title == title) {
             if (post.class == "post" && post.postedBy == id && post.description == text && post.score == score && post.title == title) {
                 added = true;
             }
@@ -131,9 +147,12 @@ describe('createPost test', () => {
 describe('createReply test', () => {
     it('Successful reply creation', async () => {
         const userID = "6d737a3b-d543-459b-aca6-d1f04952bf30";
+        const userID = "6d737a3b-d543-459b-aca6-d1f04952bf30";
         const text = "I agree";
         const id = mockPost1.itemID;
+        const id = mockPost1.itemID;
 
+        await createReply(userID, text, id);
         await createReply(userID, text, id);
         let added = false;
         mockDatabase.forEach((post) => {
