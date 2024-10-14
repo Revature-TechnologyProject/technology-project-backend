@@ -97,5 +97,5 @@ module.exports = {
     updateUser,
     getUserById,
     updateRole,
-    deleteUser
+    deleteUser,
 };

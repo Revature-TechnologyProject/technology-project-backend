@@ -1,12 +1,12 @@
 const express = require('express');
 const userService = require('../services/userService');
-const { validateUsername, validatePassword } = require('../middleware/userMiddleware');
+const userMiddleware = require('../middleware/userMiddleware');
 const {  authenticate, adminAuthenticate  } = require("../middleware/authMiddleware");
 const { handleServiceError } = require("../utilities/routerUtilities");
 
 const userRouter = express.Router();
 
-userRouter.post("/", validateUsername, validatePassword, async (req, res) => {
+userRouter.post("/", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -20,7 +20,7 @@ userRouter.post("/", validateUsername, validatePassword, async (req, res) => {
     }
 });
 
-userRouter.post("/login", validateUsername, validatePassword, async (req, res) => {
+userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -60,7 +60,7 @@ userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
     }
 });
 
-userRouter.patch("/:id/role", validateRole, adminAuthenticate, async (req, res) => {
+userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     try {
