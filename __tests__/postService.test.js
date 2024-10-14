@@ -62,7 +62,6 @@ beforeAll(() => {
     postDAO.sendLike.mockImplementation(async (like, id) =>{
         const post = await postDAO.getPost(id);
         post.Item.likedBy.push(like);
-        const post = await postDAO.getPost(id);
         post.Item.replies.push(reply);
         return {
             $metadata: {
@@ -126,16 +125,13 @@ beforeEach(() => {
 describe('createPost test', () => {
     it('Successful post creation', async () => {
         const id = "95db201c-35bb-47d6-8634-8701a01f496a";
-        const id = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
         const title = "Hello";
 
         await createPost(id, text, score, title);
-        await createPost(id, text, score, title);
         let added = false;
         mockDatabase.forEach((post) => {
-            if (post.class == "post" && post.postedBy == id && post.description == text && post.score == score && post.title == title) {
             if (post.class == "post" && post.postedBy == id && post.description == text && post.score == score && post.title == title) {
                 added = true;
             }
@@ -147,12 +143,9 @@ describe('createPost test', () => {
 describe('createReply test', () => {
     it('Successful reply creation', async () => {
         const userID = "6d737a3b-d543-459b-aca6-d1f04952bf30";
-        const userID = "6d737a3b-d543-459b-aca6-d1f04952bf30";
         const text = "I agree";
         const id = mockPost1.itemID;
-        const id = mockPost1.itemID;
 
-        await createReply(userID, text, id);
         await createReply(userID, text, id);
         let added = false;
         mockDatabase.forEach((post) => {
