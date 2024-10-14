@@ -1,6 +1,6 @@
 const express = require('express');
 const userService = require('../services/userService');
-const { validateUsername, validatePassword, validateRole } = require('../middleware/userMiddleware');
+const userMiddleware = require('../middleware/userMiddleware');
 const {  authenticate, adminAuthenticate  } = require("../middleware/authMiddleware");
 const { handleServiceError } = require("../utilities/routerUtilities");
 
@@ -16,7 +16,7 @@ const userRouter = express.Router();
  *          data - The database entry of the new account without the password
  *      400 - Username already taken
  */
-userRouter.post("/", validateUsername, validatePassword, async (req, res) => {
+userRouter.post("/", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -40,7 +40,7 @@ userRouter.post("/", validateUsername, validatePassword, async (req, res) => {
  *          token - JWT session token, expires after 1 day
  *      400 - Invalid username/password
  */
-userRouter.post("/login", validateUsername, validatePassword, async (req, res) => {
+userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -114,7 +114,7 @@ userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
  *      400 - User is already role ${role}
  *      400 - Cannot demote admin, use AWS console instead
  */
-userRouter.patch("/:id/role", validateRole, adminAuthenticate, async (req, res) => {
+userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     try {

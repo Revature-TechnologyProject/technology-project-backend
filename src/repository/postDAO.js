@@ -1,11 +1,9 @@
 const { PutCommand, ScanCommand, GetCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
-const { TableName, runCommand } = require('../utilities/dynamoUtilities');
-
-const CLASS = "post";
+const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilities');
 
 async function sendPost(post){
     const command = new PutCommand({
-        TableName: TableName,
+        TableName,
         Item: post
     });
     return await runCommand(command);
@@ -13,25 +11,25 @@ async function sendPost(post){
 
 async function scanPosts() {
     const command = new ScanCommand({
-        TableName: TableName,
+        TableName,
         FilterExpression: "#class = :class",
         ExpressionAttributeNames: {
             "#class": "class"
         },
         ExpressionAttributeValues: {
-            ":class": CLASS
+            ":class": CLASS_POST
         }
-    })
+    });
     const response = await runCommand(command);
     return response;
 }
 
 async function sendReply(reply, id){
     const command = new UpdateCommand({
-        TableName: TableName,
-        Key: {"class": CLASS, "itemID": id},
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
         ExpressionAttributeValues: {
-            ":reply": reply
+            ":reply": [reply]
         },
         UpdateExpression: "SET replies = list_append(replies, :reply)",
         ReturnValues: "UPDATED_NEW"
@@ -42,7 +40,30 @@ async function sendReply(reply, id){
 async function getPost(id) {
     const command = new GetCommand({
         TableName,
-        Key: {class: CLASS, itemID: id}
+        Key: {class: CLASS_POST, itemID: id}
+    });
+    return await runCommand(command);
+}
+
+async function sendLike(like, id){
+    const command = new UpdateCommand({
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
+        ExpressionAttributeValues: {
+            ":r": [like]
+        },
+        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+}
+
+async function removeLike(index, id){
+    const command = new UpdateCommand({
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
+        UpdateExpression: "REMOVE likedBy["+index+"]",
+        ReturnValues: "UPDATED_NEW"
     });
     return await runCommand(command);
 }
@@ -51,5 +72,7 @@ module.exports = {
     sendPost,
     scanPosts,
     sendReply,
-    getPost
+    getPost,
+    sendLike,
+    removeLike
 };

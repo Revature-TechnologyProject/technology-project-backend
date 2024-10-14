@@ -1,9 +1,8 @@
 const express = require('express');
-const { createPost, createReply, seePosts } = require('../services/postService');
+const postService = require('../services/postService');
 const { handleServiceError } = require('../utilities/routerUtilities');
 const { authenticate } = require("../middleware/authMiddleware");
-const { validateTextBody, validateScore } = require('../middleware/postMiddleware');
-
+const postMiddleware = require('../middleware/postMiddleware');
 
 const postRouter = express.Router();
 
@@ -16,12 +15,12 @@ const postRouter = express.Router();
  * Response
  *      200 - Post successfully created
  */
-postRouter.post("/", authenticate, validateTextBody, validateScore, async (req, res) => {
+postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     try {
-        await createPost(res.locals.user.username, req.body.text, req.body.score, req.body.title);
+        await postService.createPost(res.locals.user.itemID, req.body.text, req.body.score, req.body.title);
         res.status(200).json({
-            message: "Post successfully created"
+            message: `Post successfully created`
         });
     } catch (err) {
         handleServiceError(err, res);
@@ -37,7 +36,7 @@ postRouter.post("/", authenticate, validateTextBody, validateScore, async (req, 
 postRouter.get("/", async (req, res) => {
     //TODO check song title exists in API
     try {
-        const posts = await seePosts();
+        const posts = await postService.seePosts();
         res.status(200).json({
             posts: posts
         });
@@ -55,13 +54,33 @@ postRouter.get("/", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.patch("/replies", authenticate, validateTextBody, async (req, res) => {
+postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
     //TODO check song title exists in API
     try {
-        await createReply(res.locals.user.username, req.body.text, req.body.id);
+        const reply = await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
         res.status(200).json({
-            message: "Reply successfully created"
+            message: `Replied to ${req.params.id} successfully`,
+            Reply: reply
         });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.patch("/:id/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
+    //TODO check song title exists in API
+    try {
+        await postService.checkLike(req.body.like, req.params.id, res.locals.user.itemID);
+        if (req.body.like == 1){
+            res.status(200).json({
+                message: `Liked post ${req.params.id} successfully`
+            });
+        }
+        else {
+            res.status(200).json({
+                message: `Disliked post ${req.params.id} successfully`
+            });
+        }
     } catch (err) {
         handleServiceError(err, res);
     }
