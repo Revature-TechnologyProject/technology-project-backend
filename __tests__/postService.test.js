@@ -7,20 +7,22 @@ let mockDatabase = [];
 const mockPost1 = {
     class: CLASS_POST,
     itemID: "e7b1998e-77d3-4cad-9955-f20135d840d0",
-    postedBy: "user_1",
+    postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
     description: "Hello world",
     score: 50,
     title: "Title",
-    replies: []
+    replies: [],
+    likedBy: []
 };
 const mockPost2 = {
     class: CLASS_POST,
     itemID: "29ee2056-c74e-4537-ac95-6234a2506426",
-    postedBy: "user_2",
+    postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     description: "This is a great song",
     score: 100,
     title: "Title",
-    replies: []
+    replies: [],
+    likedBy: []
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
@@ -55,30 +57,45 @@ beforeAll(() => {
             },
         };
     });
-    postDAO.sendReply.mockImplementation(async (postId, reply) => {
-        for (let i = 0; i < mockDatabase.length; i++){
-            if (mockDatabase[i].itemID === postId){
-                mockDatabase[i].replies.push(reply[0]);
-                return {
-                    $metadata: {
-                        httpStatusCode: 201
-                    }
-                };
+    postDAO.sendReply.mockImplementation(async (reply, id) => {
+        const post = await postDAO.getPost(id);
+        post.Item.replies.push(reply);
+        return {
+            $metadata: {
+                httpStatusCode: 200
             }
-        }
+        };
     });
-    postDAO.updateReplies.mockImplementation(async (postId, replies) => {
-        for (let i = 0; i < mockDatabase.length; i++) {
-            if (mockDatabase[i].itemID === postId) {
-                mockDatabase[i].replies = replies;
-                return {
-                    $metadata: {
-                        httpStatusCode: 200
-                    }
-                };
+    postDAO.sendLike.mockImplementation(async (like, id) =>{
+        const post = await postDAO.getPost(id);
+        post.Item.likedBy.push(like);
+        for (let i = 0; i < mockDatabase.length; i++){
+            if (mockDatabase[i].itemID == post.Item.itemID){
+                mockDatabase[i].likedBy = post.Item.likedBy;
+                break;
             }
         }
-    }); 
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            }
+        };
+    });
+    postDAO.removeLike.mockImplementation(async (index, id) => {
+        const post = await postDAO.getPost(id);
+        post.Item.likedBy.splice(index, 1);
+        for (let i = 0; i < mockDatabase.length; i++){
+            if (mockDatabase[i].itemID == post.Item.itemID){
+                mockDatabase[i].likedBy = post.Item.likedBy;
+                break;
+            }
+        }
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            }
+        };
+    });
 });
 
 beforeEach(() => {
@@ -87,6 +104,10 @@ beforeEach(() => {
     mockDatabase.push(mockPost1);
     mockDatabase.push(mockPost2);
     postDAO.sendPost.mockClear();
+    postDAO.sendReply.mockClear();
+    postDAO.getPost.mockClear();
+    postDAO.sendLike.mockClear();
+    postDAO.removeLike.mockClear();
     postDAO.getPost.mockClear();
     postDAO.sendReply.mockClear();
     postDAO.updateReplies.mockClear();
@@ -95,7 +116,7 @@ beforeEach(() => {
 describe('createPost test', () => {
     
     it('Successful post creation', async () => {
-        const userId = "user_3";
+        const id = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
         const title = "Hello";
@@ -123,6 +144,49 @@ describe('createReply test', () => {
         mockDatabase.forEach((post) => {
             if(post.itemID === postId && post.replies.length === 1) {
                 added = true;
+            }
+        });
+        expect(added).toBeTruthy();
+    });
+});
+
+describe('checkLike test', () => {
+    it('Successful like post', async () => {
+        const id = mockPost1.itemID;
+        const like = 1;
+        const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
+
+        await checkLike(like, id, userID);
+        let added = false;
+        mockDatabase.forEach((post) => {
+            if (post.itemID == id){
+                for (const i of post.likedBy){
+                    if(i.userID == userID && i.like == 1){
+                        added = true;
+                    }
+                }
+            }
+        });
+        expect(added).toBeTruthy();
+    });
+    it('Successful dislike post on post that was already liked', async () => {
+        const id = mockPost1.itemID;
+        const like = -1;
+        const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
+
+        await checkLike(like, id, userID);
+        let added = false;
+        mockDatabase.forEach((post) => {
+            if (post.itemID == id){
+                for (const i of post.likedBy){
+                    if (i.userID == userID && i.like == -1){
+                        added = true;
+                    }
+                    if (i.userID == userID && i.like == 1){
+                        added = false;
+                        return;
+                    }
+                }
             }
         });
         expect(added).toBeTruthy();

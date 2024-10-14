@@ -2,12 +2,20 @@ const express = require('express');
 const postService = require('../services/postService');
 const { handleServiceError } = require('../utilities/routerUtilities');
 const { authenticate, postOwnerOrAdminAuthenticate, replyOwnerOrAdminAuthenticate } = require("../middleware/authMiddleware");
-const { validateTextBody, validateScore } = require('../middleware/postMiddleware');
-
+const postMiddleware = require('../middleware/postMiddleware');
 
 const postRouter = express.Router();
 
-postRouter.post("/", authenticate, validateTextBody, validateScore, async (req, res) => {
+/**
+ * Creates a new post in the database
+ * Request Body
+ *      title {string}
+ *      score {number}
+ *      text {string}
+ * Response
+ *      200 - Post successfully created
+ */
+postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { text, score, title } = req.body;
@@ -23,12 +31,40 @@ postRouter.post("/", authenticate, validateTextBody, validateScore, async (req, 
     }
 });
 
+/**
+ * Get all posts
+ * Response
+ *      200
+ *          posts - Array of retrieved posts
+ */
 postRouter.get("/", async (req, res) => {
     //TODO check song title exists in API
     try {
         const posts = await postService.seePosts();
         res.status(200).json({
-            Posts: posts
+            posts: posts
+        });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+/**
+ * Add a reply to an existing post
+ * Request Body
+ *      id {string}
+ *      text {string}
+ * Response
+ *      200 - Reply successfully created
+ *      400 - That post doesn't exist
+ */
+postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
+    //TODO check song title exists in API
+    try {
+        const reply = await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
+        res.status(200).json({
+            message: `Replied to ${req.params.id} successfully`,
+            Reply: reply
         });
     } catch (err) {
         handleServiceError(err, res);

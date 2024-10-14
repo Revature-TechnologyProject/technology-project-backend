@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const uuid = require("uuid");
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 const userDAO = require('../repository/userDAO');
 const { throwIfError } = require('../utilities/dynamoUtilities');
 
@@ -37,7 +37,7 @@ const login = async (username, password) => {
 
     throw {
         status: 400,
-        message: "Invalid username/password"
+        message: "Invalid username or password"
     }
 }
 

@@ -3,7 +3,7 @@ const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilit
 
 const sendPost = async (post) => {
     const command = new PutCommand({
-        TableName: TableName,
+        TableName,
         Item: post
     });
     return await runCommand(command);
@@ -24,7 +24,7 @@ const sendReply = async (postId, reply) => {
 
 const scanPosts = async () => {
     const command = new ScanCommand({
-        TableName: TableName,
+        TableName,
         FilterExpression: "#class = :class",
         ExpressionAttributeNames: {
             "#class": "class"
@@ -32,7 +32,7 @@ const scanPosts = async () => {
         ExpressionAttributeValues: {
             ":class": CLASS_POST
         }
-    })
+    });
     const response = await runCommand(command);
     return response;
 }
@@ -72,5 +72,7 @@ module.exports = {
     scanPosts,
     getPost,
     updateReplies,
-    deletePost
+    deletePost,
+    sendLike,
+    removeLike
 };
