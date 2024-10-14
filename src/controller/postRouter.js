@@ -96,16 +96,8 @@ postRouter.patch("/:id/likes", authenticate, postMiddleware.validateLike, async 
 
 postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => {
     const { postId } = req.params;
-    //const userId = res.locals.user.itemID;
-    //const { role } = res.locals.user;
 
     try {
-        /*
-        const foundPost = await postService.getPostById(postId);
-        if (!(foundPost.postedBy === userId || role === "admin")) {
-            return res.status(400).json({ message: "Unauthorized access - wrong user or not admin" });
-        }
-        */
         await postService.deletePost(postId);
         res.status(200).json({ message: "Deleted post", data: postId });
     } catch (err) {
@@ -115,16 +107,8 @@ postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => 
 
 postRouter.delete("/:postId/replies/:replyId", replyOwnerOrAdminAuthenticate, async (req, res) => {
     const { postId, replyId } = req.params;
-    //const userId = res.locals.user.itemID;
-    //const { role } = res.locals.user;
 
     try {
-        /*
-        const foundReply = await postService.getReplyOfPost(postId, replyId);
-        if (!(foundReply.postedBy === userId || role === "admin")) {
-            return res.status(400).json({ message: "Unauthorized access - wrong user or not admin" });
-        }
-        */
         await postService.deleteReply(postId, replyId);
         res.status(200).json({ message: "Deleted reply" });
     } catch (err) {
