@@ -56,9 +56,6 @@ beforeAll(() => {
     postDAO.updatePost.mockImplementation(async (id, attributes) => {
         for (let i = 0; i < mockDatabase.length; i++) {
             if (mockDatabase[i].itemID == id) {
-                // const post = mockDatabase[i];
-                // post.attributes = attributes;
-                // mockDatabase[i] = post;
                 Object.keys(attributes).forEach((key) => {
                     mockDatabase[i][key] = attributes[key];
                 });
