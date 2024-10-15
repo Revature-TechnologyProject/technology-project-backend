@@ -1,5 +1,5 @@
 const { PutCommand, GetCommand, UpdateCommand, QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
-const { TableName, runCommand, flaggedIndex, CLASS_POST } = require('../utilities/dynamoUtilities');
+const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilities');
 
 async function sendPost(Item){
     const command = new PutCommand({
