@@ -1,10 +1,10 @@
-const { PutCommand, ScanCommand, GetCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
-const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilities');
+const { PutCommand, GetCommand, UpdateCommand, QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { TableName, runCommand, flaggedIndex, CLASS_POST } = require('../utilities/dynamoUtilities');
 
-async function sendPost(post){
+async function sendPost(Item){
     const command = new PutCommand({
-        TableName,
-        Item: post
+        TableName: TableName,
+        Item
     });
     return await runCommand(command);
 }
@@ -37,14 +37,6 @@ async function sendReply(reply, id){
     return await runCommand(command);
 }
 
-async function getPost(id) {
-    const command = new GetCommand({
-        TableName,
-        Key: {class: CLASS_POST, itemID: id}
-    });
-    return await runCommand(command);
-}
-
 async function sendLike(like, id){
     const command = new UpdateCommand({
         TableName,
@@ -68,11 +60,76 @@ async function removeLike(index, id){
     return await runCommand(command);
 }
 
+async function updatePost(id, attributes) {
+    const command = new UpdateCommand({
+        TableName,
+        Key: {class: CLASS_POST, itemID: id},
+        UpdateExpression: "SET #description = :description, #score = :score, #title = :title, #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#description": "description",
+            "#score": "score",
+            "#title": "title",
+            "#isFlagged": "isFlagged" 
+        },
+        ExpressionAttributeValues: {
+            ":description": attributes.description,
+            ":title": attributes.title,
+            ":score": attributes.score,
+            ":isFlagged": attributes.isFlagged
+        }
+    })
+    return await runCommand(command);
+}
+
+async function getPost(id) {
+    const command = new GetCommand({
+        TableName,
+        Key: {class: CLASS_POST, itemID: id}
+    });
+    return await runCommand(command);
+}
+
+async function updatePostFlag(id, flag) {
+    const command = new UpdateCommand({
+        TableName,
+        Key: {class: CLASS_POST, itemID: id},
+        UpdateExpression: "SET #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#isFlagged": "isFlagged" 
+        },
+        ExpressionAttributeValues: {
+            ":isFlagged": flag
+        }
+    })
+    return await runCommand(command);
+}
+
+async function getFlaggedPost(isFlagged) {
+    const command = new QueryCommand({
+        TableName,
+        IndexName: "class-isFlagged-index",
+        KeyConditionExpression: "#class = :class AND #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#class": "class",
+            "#isFlagged": "isFlagged"
+        },
+        ExpressionAttributeValues: {
+            ":isFlagged": isFlagged,
+            ":class": CLASS_POST
+        }
+    })
+    const result = await runCommand(command);
+    return result
+}
+
 module.exports = {
     sendPost,
+    updatePost,
+    getPost,
+    updatePostFlag,
+    getFlaggedPost,
     scanPosts,
     sendReply,
-    getPost,
     sendLike,
-    removeLike
+    removeLike,
 };
