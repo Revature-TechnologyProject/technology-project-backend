@@ -123,7 +123,7 @@ postRouter.patch("/:id/replies", authenticate, postMiddleware.validateTextBody, 
         const reply = await postService.createReply(res.locals.user.itemID, req.body.text, req.params.id);
         res.status(200).json({
             message: `Replied to ${req.params.id} successfully`,
-            Reply: reply
+            reply: reply
         });
     } catch (err) {
         handleServiceError(err, res);

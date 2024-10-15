@@ -130,6 +130,9 @@ async function checkTags(tags, inclusive){
     if (inclusive == 1){
         for (const post of posts.Items){
             for (const i of tags){
+                if (!post.tags){
+                    break;
+                }
                 if (post.tags.includes(i)){
                     postSet.add(post);
                     break;
@@ -141,7 +144,7 @@ async function checkTags(tags, inclusive){
         for (const post of posts.Items){
             let should = true;
             for (const i of tags){
-                if (!post.tags.includes(i)){
+                if (!post.tags || !post.tags.includes(i)){
                     should = false;
                     break;
                 }
