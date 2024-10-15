@@ -106,9 +106,9 @@ postRouter.get("/", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.post("/tags", async (req, res) => {
+postRouter.get("/tags", async (req, res) => {
     try {
-        const posts = await postService.checkTags(req.body.tags, req.body.inclusive);
+        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
         res.status(200).json({
             Posts: posts
         });

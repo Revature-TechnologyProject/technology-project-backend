@@ -10,25 +10,23 @@ const mockPost1 = {
     class: "post",
     itemID: "e7b1998e-77d3-4cad-9955-f20135d840d0",
     postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
-    postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
     description: "Hello world",
     score: 50,
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: ["rock", "hip-hop"]
+    tags: new Map([["rock",undefined], ["hip-hop",undefined]])
 };
 const mockPost2 = {
     class: "post",
     itemID: "29ee2056-c74e-4537-ac95-6234a2506426",
-    postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     description: "This is a great song",
     score: 100,
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: ["drill"]
+    tags: new Map([["drill",undefined]])
 };
 
 beforeAll(() => {
@@ -279,7 +277,7 @@ describe('checkLike test', () => {
 });
 describe('checkTags test', () => {
     it('Successful search on rock (inclusive)', async () => {
-        const tag = "rock";
+        const tag = ["rock"];
         let added = false;
 
         const result = await checkTags(tag, 1);
@@ -287,7 +285,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Bad search on rap (inclusive)', async () => {
-        const tag = "rap";
+        const tag = ["rap"];
         let added = false;
 
         const result = await checkTags(tag, 1);
@@ -295,7 +293,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Bad search on rock (non-inclusive)', async () => {
-        const tag = "rock,rap";
+        const tag = ["rock","rap"];
         let added = false;
 
         const result = await checkTags(tag, 0);
@@ -303,7 +301,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Successful search on rock (non-inclusive)', async () => {
-        const tag = "rock,hip-hop";
+        const tag = ["rock","hip-hop"];
         let added = false;
 
         const result = await checkTags(tag, 0);

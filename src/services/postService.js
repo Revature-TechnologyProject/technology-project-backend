@@ -3,7 +3,13 @@ const { throwIfError } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
 
 async function createPost(userID, description, score, title, tags){
-    const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description, score, title, replies: [], likedBy: [], tags: tags ? tags.split(',') : [], isFlagged: 0};
+    let tagMap = new Map();
+    if (tags){
+        for (const i of tags){
+            tagMap.set(i, undefined);
+        }
+    }
+    const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description, score, title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0};
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
@@ -125,7 +131,6 @@ async function checkTags(tags, inclusive){
     if (!tags){
         return posts.Items;
     }
-    tags = tags.split(',');
     const postSet = new Set();
     if (inclusive == 1){
         for (const post of posts.Items){
@@ -133,7 +138,7 @@ async function checkTags(tags, inclusive){
                 if (!post.tags){
                     break;
                 }
-                if (post.tags.includes(i)){
+                if (post.tags.has(i)){
                     postSet.add(post);
                     break;
                 }
@@ -144,7 +149,7 @@ async function checkTags(tags, inclusive){
         for (const post of posts.Items){
             let should = true;
             for (const i of tags){
-                if (!post.tags || !post.tags.includes(i)){
+                if (!post.tags || !post.tags.has(i)){
                     should = false;
                     break;
                 }
