@@ -24,15 +24,18 @@ const register = async (username, password) => {
     const result = await userDAO.putUser(user);
     throwIfError(result);
     delete (user.password);
-    return user;
-};
+    delete(user.class);
+    const token = createToken(user);
+    return {user, token};
+}
 
 const login = async (username, password) => {
     const result = await userDAO.queryByUsername(username);
     throwIfError(result);
     const user = result.Items[0];
     if (user && bcrypt.compareSync(password, user.password)) {
-        return createToken(user);
+        delete(user.class);
+        return {token: createToken(user), user};
     }
 
     throw {
