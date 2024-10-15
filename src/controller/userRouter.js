@@ -20,10 +20,11 @@ userRouter.post("/", userMiddleware.validateUsername, userMiddleware.validatePas
     const { username, password } = req.body;
 
     try {
-        const data = await userService.register(username, password);
+        const {user, token} = await userService.register(username, password);
         res.status(201).json({
             message: "User successfully registered",
-            data
+            user,
+            token
         });
     } catch (err) {
         handleServiceError(err, res);
@@ -44,10 +45,11 @@ userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.valida
     const { username, password } = req.body;
 
     try {
-        const token = await userService.login(username, password);
+        const {token, user} = await userService.login(username, password);
         res.status(200).json({
             token,
-            message: "Successfully logged in"
+            message: "Successfully logged in",
+            user
         });
     } catch (err) {
         handleServiceError(err, res);
