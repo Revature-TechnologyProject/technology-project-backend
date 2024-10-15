@@ -6,7 +6,7 @@ const songRouter = require("./controller/songRouter");
 require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // Middleware
 app.use(cors());
