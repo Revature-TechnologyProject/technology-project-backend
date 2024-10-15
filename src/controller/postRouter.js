@@ -12,6 +12,7 @@ const postRouter = express.Router();
  *      title {string}
  *      score {number}
  *      text {string}
+ *      tags {string,string,...}
  * Response
  *      200 - Post successfully created
  */
