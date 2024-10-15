@@ -6,7 +6,7 @@ async function createPost(userID, description, score, title, tags){
     let tagMap = new Map();
     if (tags){
         for (const i of tags){
-            tagMap.set(i, undefined);
+            tagMap.set(i, true);
         }
     }
     const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description, score, title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0};

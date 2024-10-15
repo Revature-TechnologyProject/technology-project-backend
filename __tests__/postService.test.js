@@ -15,7 +15,7 @@ const mockPost1 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["rock",undefined], ["hip-hop",undefined]])
+    tags: new Map([["rock",true], ["hip-hop",true]])
 };
 const mockPost2 = {
     class: "post",
@@ -26,7 +26,7 @@ const mockPost2 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["drill",undefined]])
+    tags: new Map([["drill",true]])
 };
 
 beforeAll(() => {
