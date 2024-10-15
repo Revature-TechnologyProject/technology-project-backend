@@ -30,7 +30,7 @@ postRouter.post("/", authMiddleware.authenticate(), postMiddleware.validateTextB
     }
 });
 
-postRouter.patch("/:id", authenticate, async (req, res) => {
+postRouter.patch("/:id", authMiddleware.authenticate(), async (req, res) => {
     const {id} = req.params;
     try {
         const {Item} = await postService.getPost(id);

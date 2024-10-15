@@ -76,12 +76,6 @@ async function getFlaggedPost(isFlagged) {
     return result.Items;
 }
 
-async function seePosts(){
-    const posts = await postDAO.scanPosts();
-    throwIfError(posts);
-    return posts.Items;
-}
-
 async function createReply(userID, text, id){
     await getPostById(id);
     const reply = {postedBy: userID, description: text, itemID: uuid.v4()};
@@ -109,16 +103,6 @@ const seePosts = async () => {
     throwIfError(posts);
     return posts.Items;
 }
-
-const updatePost = async (id, title, score, description) => {
-    const post = await getPostById(id);
-    post.title = title ? title : post.title;
-    post.score = score ? score : post.score;
-    post.description = description ? description : post.description;
-
-    const updateResult = await postDAO.updatePost(post);
-    throwIfError(updateResult);
-};
 
 const deletePost = async (id) => {
     await getPostById(id);
@@ -152,7 +136,6 @@ const checkLike = async (like, postID, userID) => {
 
 module.exports = {
     createPost,
-    updatePost,
     getPost,
     updatePostFlag,
     getFlaggedPost,

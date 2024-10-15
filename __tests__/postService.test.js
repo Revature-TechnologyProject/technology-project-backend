@@ -1,7 +1,6 @@
 const { createPost, createReply, getPostById, updatePost, updatePostFlag, getFlaggedPost, checkLike, deletePost } = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
 const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
-const postDAO = require("../src/repository/postDAO");
 
 jest.mock('../src/repository/postDAO');
 jest.mock("../src/utilities/dynamoUtilities");
@@ -54,10 +53,15 @@ beforeAll(() => {
             }
         };
     });
-    postDAO.updatePost.mockImplementation(async (post) => {
+    postDAO.updatePost.mockImplementation(async (id, attributes) => {
         for (let i = 0; i < mockDatabase.length; i++) {
-            if (mockDatabase[i].itemID == post.itemID) {
-                mockDatabase[i] = post;
+            if (mockDatabase[i].itemID == id) {
+                // const post = mockDatabase[i];
+                // post.attributes = attributes;
+                // mockDatabase[i] = post;
+                Object.keys(attributes).forEach((key) => {
+                    mockDatabase[i][key] = attributes[key];
+                });
                 return {
                     $metadata: {
                         httpStatusCode: 200
@@ -282,7 +286,7 @@ describe('updatePost test', () => {
         const score = 28;
         const description = "New description";
 
-        await updatePost(id, title, score, description);
+        await updatePost(id, mockPost1, {title, score, description});
         const post = (await postDAO.getPost(id)).Item;
 
         expect(post.title).toEqual(title);
@@ -298,7 +302,7 @@ describe('updatePost test', () => {
         const expectedScore = mockPost1.score;
         const expectedDescription = mockPost1.description;
 
-        await updatePost(id, title, score, description);
+        await updatePost(id, mockPost1, {title, score, description});
         const post = (await postDAO.getPost(id)).Item;
 
         expect(post.title).toEqual(title);

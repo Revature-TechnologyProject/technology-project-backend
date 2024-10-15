@@ -67,22 +67,6 @@ async function removeLike(index, id) {
     return await runCommand(command);
 };
 
-const updatePost = async (post) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: { class: CLASS_POST, itemID: post.itemID },
-        UpdateExpression:
-            "set title = :title, score = :score, description = :description",
-        ExpressionAttributeValues: {
-            ":title": post.title,
-            ":score": post.score,
-            ":description": post.description
-        },
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
-};
-
 const deletePost = async (id) => {
     const command = new DeleteCommand({
         TableName,
@@ -153,7 +137,6 @@ module.exports = {
     getFlaggedPost,
     updatePost,
     updatePostFlag,
-    sendReply,
     sendLike,
     removeLike,
     deletePost
