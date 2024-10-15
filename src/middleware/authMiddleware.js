@@ -27,7 +27,7 @@ const adminAuthenticate = (req, res, next) => {
         }
         res.locals.user = user;
         next();
-    } catch {
+    } catch (err) {
         return res.status(401).json("Unauthorized Access, try relogging");
     }
 }
