@@ -38,7 +38,7 @@ async function getSongs(q, offset, retries = 0) {
         }
         // 401 means token expired so retry method after getting a new token
         token = await getToken();
-        return await getSongs(q, type, offset, retries + 1);
+        return await getSongs(q, offset, retries + 1);
     }
     return json;
 }

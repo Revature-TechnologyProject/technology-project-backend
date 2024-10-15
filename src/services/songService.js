@@ -35,7 +35,7 @@ async function getSongs(query, offset = 0) {
         let previous = "";
         if (offset > 0) {
             const previousOffset = (offset - (total - (total - tracks.limit)) > 0) ? offset - (total - (total - tracks.limit)) : 0;
-            previous = constructPageURL(query, previousOffset, type);
+            previous = constructPageURL(query, previousOffset);
         }
         // There's a bug with spotifies return for tracks.next
         const nextOffset = tracks.next ? offset + (total - (total - tracks.limit)) : null;
@@ -78,7 +78,6 @@ function cleanData(data) {
  * 
  * @param query The input parameters given by the user
  * @param offset The offset to start from
- * @param type The type of query (artist, track, album)
  * @returns string of the continuation url
  */
 function constructPageURL(query, offset) {
@@ -92,7 +91,7 @@ function constructPageURL(query, offset) {
             url += `&${key}=${query[key]}`;
         }
     }
-    url+=`offset=${offset}`;
+    url+=`&offset=${offset}`;
     return url;
 }
 
