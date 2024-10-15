@@ -22,9 +22,9 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
 
     try {
         const createdPost = await postService.createPost(userId, text, score, title);
-        res.status(200).json({
+        res.status(201).json({
             message: `Post successfully created`,
-            post
+            createdPost
         });
     } catch (err) {
         handleServiceError(err, res);
@@ -34,7 +34,7 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
 postRouter.patch("/:id", authenticate, async (req, res) => {
     const {id} = req.params;
     try {
-        const {Item} = await postService.getPost(id);
+        const {Item} = await postService.getPostById(id);
         const post = Item;
         const {user} = res.locals;
         if (user.role === "user" && post.postedBy !== user.itemID) {
@@ -59,42 +59,7 @@ postRouter.patch("/:id", authenticate, async (req, res) => {
 postRouter.get("/:id", async (req, res) => {
     const {id} = req.params;
     try {
-        const post = await postService.getPost(id);
-        res.status(200).json(post.Item);
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
-postRouter.patch("/:id", authenticate, async (req, res) => {
-    const {id} = req.params;
-    try {
-        const {Item} = await postService.getPost(id);
-        const post = Item;
-        const {user} = res.locals;
-        if (user.role === "user" && post.postedBy !== user.itemID) {
-            const {flag} = req.body;
-            await postService.updatePostFlag(id, flag);
-            return res.status(200).json({id, updated: {isFlagged: flag}})
-        } else if (user.role === "admin" || post.postedBy === user.itemID) {
-            // Only get updatable fields from the body
-            const {description, title, score} = req.body;
-            let {flag} = req.body;
-            if (flag !== undefined && post.postedBy === user.itemID) {
-                flag = undefined; // Users cannot flag/unflag their own post
-            }
-            const updated = await postService.updatePost(id, post, {description: description, title: title, score: score, isFlagged: flag});
-            return res.status(200).json({id, updated});
-        }
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
-postRouter.get("/:id", async (req, res) => {
-    const {id} = req.params;
-    try {
-        const post = await postService.getPost(id);
+        const post = await postService.getPostById(id);
         res.status(200).json(post.Item);
     } catch (err) {
         handleServiceError(err, res);
@@ -151,7 +116,7 @@ postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBo
 
     try {
         const createdReply = await postService.createReply(userId, postId, text);
-        res.status(200).json({
+        res.status(201).json({
             message: `Replied to ${postId} successfully`,
             createdReply: createdReply
         });

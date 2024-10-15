@@ -29,7 +29,7 @@ const mockPost2 = {
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
-    postedBy: mockPost2.itemID,
+    postedBy: mockPost2.postedBy,
     description: "Hello there"
 }
 
@@ -57,7 +57,7 @@ beforeAll(() => {
         return {
             $metadata: {
                 httpStatusCode: 200
-            },
+            }
         };
     });
     postDAO.sendReply.mockImplementation(async (postId, reply) => {
@@ -137,7 +137,7 @@ describe('createPost test', () => {
         const score = 69;
         const title = "Hello";
 
-        const response = await createPost(id, text, score, title);
+        const response = await postService.createPost(userId, text, score, title);
         expect(response).toEqual(mockDatabase[mockDatabase.length - 1]);
     });
 });
@@ -157,7 +157,7 @@ describe("test suite for updating posts", () => {
             isFlagged: undefined,
             title: "BOO"
         }
-        const attributes = await updatePost("filler", post, updates);
+        const attributes = await postService.updatePost("filler", post, updates);
 
         // Merge of post and updates where updates override post where defined and post overrides undefined fields
         const expected = {
@@ -181,7 +181,7 @@ describe("Test suite for flagging posts", () => {
         // flag is checked in controller (postman tests)
         const flag = 1;
 
-        await updatePostFlag(id, flag);
+        await postService.updatePostFlag(id, flag);
 
         // should call the DAO with the same arguments
         expect(postDAO.updatePostFlag.mock.calls.length).toBe(1);
@@ -199,7 +199,7 @@ describe("test suite for viewing flagged post", () => {
 
         let error;
         try {
-            await getFlaggedPost(isFlagged);
+            await postService.getFlaggedPost(isFlagged);
             error = {status: "Should not have succeeded", message: "Should not have succeeded"};
         } catch (err) {
             error = err;
@@ -214,7 +214,7 @@ describe("test suite for viewing flagged post", () => {
 
         postDAO.getFlaggedPost.mockResolvedValue({Items: []});
 
-        const flaggedPosts = await getFlaggedPost(isFlagged);
+        const flaggedPosts = await postService.getFlaggedPost(isFlagged);
 
         expect(postDAO.getFlaggedPost.mock.calls.length).toBe(1);
         expect(postDAO.getFlaggedPost.mock.calls[0][0]).toBe(isFlagged);
@@ -224,7 +224,6 @@ describe("test suite for viewing flagged post", () => {
 })
 
 describe('createReply test', () => {
-    
     it('Successful reply creation', async () => {
         const userId = "6d737a3b-d543-459b-aca6-d1f04952bf30";
         const postId = mockPost1.itemID;
@@ -285,7 +284,6 @@ describe('checkLike test', () => {
 });
 
 describe('Delete reply tests', () => {
-
     it('Successful reply deletion', async () => {
         mockDatabase[0].replies.push(mockReply1);
         
