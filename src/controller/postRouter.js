@@ -21,46 +21,48 @@ postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddlewa
     const { text, score, title } = req.body;
 
     try {
-        const createdPost = await postService.createPost(userId, text, score, title);
+        const post = await postService.createPost(userId, text, score, title);
         res.status(201).json({
             message: `Post successfully created`,
-            createdPost
+            post
         });
     } catch (err) {
         handleServiceError(err, res);
     }
 });
 
-postRouter.patch("/:id", authenticate, async (req, res) => {
-    const {id} = req.params;
+postRouter.patch("/:postId", authenticate, async (req, res) => {
+    const { postId } = req.params;
+    const { user } = res.locals;
+    const userId = user.itemID;
+
     try {
-        const {Item} = await postService.getPostById(id);
-        const post = Item;
-        const {user} = res.locals;
-        if (user.role === "user" && post.postedBy !== user.itemID) {
-            const {flag} = req.body;
-            await postService.updatePostFlag(id, flag);
-            return res.status(200).json({id, updated: {isFlagged: flag}})
-        } else if (user.role === "admin" || post.postedBy === user.itemID) {
+        const post = await postService.getPostById(postId);
+        if (user.role === "user" && post.postedBy !== userId) {
+            const { flag } = req.body;
+            await postService.updatePostFlag(postId, flag);
+            return res.status(200).json({ postId, updated: { isFlagged: flag } });
+        } else if (user.role === "admin" || post.postedBy === userId) {
             // Only get updatable fields from the body
-            const {description, title, score} = req.body;
-            let {flag} = req.body;
-            if (flag !== undefined && post.postedBy === user.itemID) {
+            const { description, title, score } = req.body;
+            let { flag } = req.body;
+            if (flag !== undefined && post.postedBy === userId) {
                 flag = undefined; // Users cannot flag/unflag their own post
             }
-            const updated = await postService.updatePost(id, post, {description: description, title: title, score: score, isFlagged: flag});
-            return res.status(200).json({id, updated});
+            const updated = await postService.updatePost(postId, post, { description: description, title: title, score: score, isFlagged: flag });
+            return res.status(200).json({ postId, updated });
         }
     } catch (err) {
         handleServiceError(err, res);
     }
 });
 
-postRouter.get("/:id", async (req, res) => {
-    const {id} = req.params;
+postRouter.get("/:postId", async (req, res) => {
+    const { postId } = req.params;
+
     try {
-        const post = await postService.getPostById(id);
-        res.status(200).json(post.Item);
+        const post = await postService.getPostById(postId);
+        res.status(200).json({ post });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -78,11 +80,11 @@ postRouter.get("/", async (req, res) => {
         isFlagged = parseInt(isFlagged);
         // Since 0 is falsy we need to confirm its not 0
         if (!isFlagged && isFlagged !== 0) {
-            return res.status(400).json({message: "isFlagged query must be 0 or 1"})
+            return res.status(400).json({ message: "isFlagged query must be 0 or 1" })
         }
         try {
             const flaggedPost = await postService.getFlaggedPost(isFlagged);
-            return res.status(200).json({flaggedPost});
+            return res.status(200).json({ flaggedPost });
         } catch (err) {
             handleServiceError(err, res);
         }
@@ -90,9 +92,7 @@ postRouter.get("/", async (req, res) => {
         //TODO check song title exists in API
         try {
             const posts = await postService.seePosts();
-            res.status(200).json({
-                posts: posts
-            });
+            res.status(200).json({ posts });
         } catch (err) {
             handleServiceError(err, res);
         }
@@ -115,29 +115,29 @@ postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBo
     const { text } = req.body;
 
     try {
-        const createdReply = await postService.createReply(userId, postId, text);
+        const reply = await postService.createReply(userId, postId, text);
         res.status(201).json({
             message: `Replied to ${postId} successfully`,
-            createdReply: createdReply
+            reply
         });
     } catch (err) {
         handleServiceError(err, res);
     }
 });
 
-postRouter.patch("/:id/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
+postRouter.patch("/:postId/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
     //TODO check song title exists in API
+    const { like } = req.body;
+    const { postId } = req.params;
+    const userId = res.locals.user.itemID;
+
     try {
-        await postService.checkLike(req.body.like, req.params.id, res.locals.user.itemID);
+        await postService.checkLike(like, postId, userId);
         if (req.body.like == 1){
-            res.status(200).json({
-                message: `Liked post ${req.params.id} successfully`
-            });
+            res.status(200).json({ message: `Liked post ${postId} successfully` });
         }
         else {
-            res.status(200).json({
-                message: `Disliked post ${req.params.id} successfully`
-            });
+            res.status(200).json({ message: `Disliked post ${postId} successfully` });
         }
     } catch (err) {
         handleServiceError(err, res);
@@ -149,7 +149,7 @@ postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => 
 
     try {
         await postService.deletePost(postId);
-        res.status(200).json({ message: "Deleted post", data: postId });
+        res.status(200).json({ message: "Deleted post", postId });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -160,7 +160,7 @@ postRouter.delete("/:postId/replies/:replyId", replyOwnerOrAdminAuthenticate, as
 
     try {
         await postService.deleteReply(postId, replyId);
-        res.status(200).json({ message: "Deleted reply" });
+        res.status(200).json({ message: "Deleted reply", replyId });
     } catch (err) {
         handleServiceError(err, res);
     }

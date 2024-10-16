@@ -10,7 +10,7 @@ const createPost = async (userId, description, score, title) => {
     return post;
 }
 
-async function updatePost(id, post, attributes) {
+const updatePost = async (id, post, attributes) => {
     const {description, title, score, isFlagged} = attributes;
     const error = {status: 400, message: ""};
     if (isFlagged !== undefined && (typeof(isFlagged) !== "number" || (isFlagged > 1 || isFlagged < 0))) {
@@ -56,7 +56,7 @@ const getPostById = async (postId) => {
     return foundPost;
 }
 
-async function updatePostFlag(id, flag) {
+const updatePostFlag = async (id, flag) => {
     const error = {status: 400, message: ""};
     //Can't update, can only flag if not an admin or the poster
     if (flag === undefined) {
@@ -71,7 +71,7 @@ async function updatePostFlag(id, flag) {
     throwIfError(result);
 }
 
-async function getFlaggedPost(isFlagged) {
+const getFlaggedPost = async (isFlagged) => {
     if (isFlagged > 1 || isFlagged < 0) {
         throw {status: 400, message: "isFlagged must be 0 or 1"};
     }
@@ -97,7 +97,7 @@ const createReply = async (userId, postId, description) => {
     return reply;
 }
 
-async function checkLike(like, postID, userID){
+const checkLike = async (like, postID, userID) => {
     const userLike = {userID, like};
     const post = await postDAO.getPost(postID);
     if (!post.Item) {
@@ -127,7 +127,7 @@ const getReplyOfPost = async (postId, replyId) => {
     const { replies } = await getPostById(postId);
     const foundReply = replies.find((reply) => reply.itemID === replyId);
     if (!foundReply) {
-        throw { status: 400, message: "That reply doesn't exist" }
+        throw { status: 400, message: `Reply ${replyId} doesn't exist` }
     }
     return foundReply;
 }

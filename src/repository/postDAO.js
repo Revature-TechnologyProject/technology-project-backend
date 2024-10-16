@@ -37,7 +37,7 @@ const sendReply = async (postId, reply) => {
     return await runCommand(command);
 }
 
-async function sendLike(like, id){
+const sendLike = async (like, id) => {
     const command = new UpdateCommand({
         TableName,
         Key: {"class": CLASS_POST, "itemID": id},
@@ -50,7 +50,7 @@ async function sendLike(like, id){
     return await runCommand(command);
 }
 
-async function removeLike(index, id){
+const removeLike = async (index, id) => {
     const command = new UpdateCommand({
         TableName,
         Key: {"class": CLASS_POST, "itemID": id},
@@ -60,7 +60,7 @@ async function removeLike(index, id){
     return await runCommand(command);
 }
 
-async function updatePost(id, attributes) {
+const updatePost = async (id, attributes) => {
     const command = new UpdateCommand({
         TableName,
         Key: {class: CLASS_POST, itemID: id},
@@ -89,7 +89,7 @@ const getPost = async (postId) => {
     return await runCommand(command);
 }
 
-async function updatePostFlag(id, flag) {
+const updatePostFlag = async (id, flag) => {
     const command = new UpdateCommand({
         TableName,
         Key: {class: CLASS_POST, itemID: id},
@@ -104,7 +104,7 @@ async function updatePostFlag(id, flag) {
     return await runCommand(command);
 }
 
-async function getFlaggedPost(isFlagged) {
+const getFlaggedPost = async (isFlagged) => {
     const command = new QueryCommand({
         TableName,
         IndexName: "class-isFlagged-index",

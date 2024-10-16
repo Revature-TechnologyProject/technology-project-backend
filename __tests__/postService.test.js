@@ -1,8 +1,6 @@
 const postService = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
 const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
-const uuid = require('uuid');
-const {throwIfError} = require("../src/utilities/dynamoUtilities")
 
 jest.mock('../src/repository/postDAO');
 jest.mock("../src/utilities/dynamoUtilities");
@@ -130,7 +128,6 @@ beforeEach(() => {
 });
 
 describe('createPost test', () => {
-    
     it('Successful post creation', async () => {
         const userId = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
