@@ -97,7 +97,6 @@ module.exports = {
     queryByUsername,
     getUserById,
     updateUser,
-    getUserById,
     updateRole,
     deleteUser,
 };

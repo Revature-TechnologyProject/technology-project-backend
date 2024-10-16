@@ -1,13 +1,12 @@
-const { createPost, updatePost, updatePostFlag, getFlaggedPost, checkLike, checkTags, createReply} = require("../src/services/postService");
+const postService = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
-const uuid = require('uuid');
-const {throwIfError} = require("../src/utilities/dynamoUtilities")
+const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
 
 jest.mock('../src/repository/postDAO');
 jest.mock("../src/utilities/dynamoUtilities");
 let mockDatabase = [];
 const mockPost1 = {
-    class: "post",
+    class: CLASS_POST,
     itemID: "e7b1998e-77d3-4cad-9955-f20135d840d0",
     postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
     description: "Hello world",
@@ -18,7 +17,7 @@ const mockPost1 = {
     tags: new Map([["rock",true], ["hip-hop",true]])
 };
 const mockPost2 = {
-    class: "post",
+    class: CLASS_POST,
     itemID: "29ee2056-c74e-4537-ac95-6234a2506426",
     postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     description: "This is a great song",
@@ -28,6 +27,11 @@ const mockPost2 = {
     likedBy: [],
     tags: new Map([["drill",true]])
 };
+const mockReply1 = {
+    itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
+    postedBy: mockPost2.postedBy,
+    description: "Hello there"
+}
 
 beforeAll(() => {
     // Mock postDAO here
@@ -35,30 +39,38 @@ beforeAll(() => {
         mockDatabase.push(post);
         return {
             $metadata: {
-                httpStatusCode: 200
+                httpStatusCode: 201
             }
         };
     });
-    postDAO.getPost.mockImplementation(async (id) => {
+    postDAO.getPost.mockImplementation(async (postId) => {
         for (let i = 0; i < mockDatabase.length; i++){
-            if (mockDatabase[i].itemID == id){
+            if (mockDatabase[i].itemID === postId){
                 return {
                     $metadata: {
                         httpStatusCode: 200
                     },
-                    Item: mockPost1
+                    Item: mockDatabase[i]
                 };
             }
         }
-    });
-    postDAO.sendReply.mockImplementation(async (reply, id) => {
-        const post = await postDAO.getPost(id);
-        post.Item.replies.push(reply);
         return {
             $metadata: {
                 httpStatusCode: 200
             }
         };
+    });
+    postDAO.sendReply.mockImplementation(async (postId, reply) => {
+        for (let i = 0; i < mockDatabase.length; i++){
+            if (mockDatabase[i].itemID === postId){
+                mockDatabase[i].replies.push(reply);
+                return {
+                    $metadata: {
+                        httpStatusCode: 201
+                    }
+                };
+            }
+        }
     });
     postDAO.sendLike.mockImplementation(async (like, id) =>{
         const post = await postDAO.getPost(id);
@@ -100,6 +112,19 @@ beforeAll(() => {
             }
         };
     });
+    postDAO.updateReplies.mockImplementation(async (postId, replies) => {
+        for (let i = 0; i < mockDatabase.length; i++) {
+            if (mockDatabase[i].itemID === postId) {
+                mockDatabase[i].replies = replies;
+                return {
+                    $metadata: {
+                        httpStatusCode: 200
+                    }
+                };
+            }
+        }
+    }); 
+    });
     postDAO.scanPosts.mockImplementation(async () => {
         return {
             $metadata: {
@@ -120,17 +145,18 @@ beforeEach(() => {
     postDAO.getPost.mockClear();
     postDAO.sendLike.mockClear();
     postDAO.removeLike.mockClear();
+    postDAO.updateReplies.mockClear();
     postDAO.scanPosts.mockClear();
 });
 
 describe('createPost test', () => {
     it('Successful post creation', async () => {
-        const id = "95db201c-35bb-47d6-8634-8701a01f496a";
+        const userId = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
         const title = "Hello";
 
-        const response = await createPost(id, text, score, title);
+        const response = await postService.createPost(userId, text, score, title);
         expect(response).toEqual(mockDatabase[mockDatabase.length - 1]);
     });
 });
@@ -150,7 +176,7 @@ describe("test suite for updating posts", () => {
             isFlagged: undefined,
             title: "BOO"
         }
-        const attributes = await updatePost("filler", post, updates);
+        const attributes = await postService.updatePost("filler", post, updates);
 
         // Merge of post and updates where updates override post where defined and post overrides undefined fields
         const expected = {
@@ -174,7 +200,7 @@ describe("Test suite for flagging posts", () => {
         // flag is checked in controller (postman tests)
         const flag = 1;
 
-        await updatePostFlag(id, flag);
+        await postService.updatePostFlag(id, flag);
 
         // should call the DAO with the same arguments
         expect(postDAO.updatePostFlag.mock.calls.length).toBe(1);
@@ -192,7 +218,7 @@ describe("test suite for viewing flagged post", () => {
 
         let error;
         try {
-            await getFlaggedPost(isFlagged);
+            await postService.getFlaggedPost(isFlagged);
             error = {status: "Should not have succeeded", message: "Should not have succeeded"};
         } catch (err) {
             error = err;
@@ -207,7 +233,7 @@ describe("test suite for viewing flagged post", () => {
 
         postDAO.getFlaggedPost.mockResolvedValue({Items: []});
 
-        const flaggedPosts = await getFlaggedPost(isFlagged);
+        const flaggedPosts = await postService.getFlaggedPost(isFlagged);
 
         expect(postDAO.getFlaggedPost.mock.calls.length).toBe(1);
         expect(postDAO.getFlaggedPost.mock.calls[0][0]).toBe(isFlagged);
@@ -218,14 +244,14 @@ describe("test suite for viewing flagged post", () => {
 
 describe('createReply test', () => {
     it('Successful reply creation', async () => {
-        const userID = "6d737a3b-d543-459b-aca6-d1f04952bf30";
+        const userId = "6d737a3b-d543-459b-aca6-d1f04952bf30";
+        const postId = mockPost1.itemID;
         const text = "I agree";
-        const id = mockPost1.itemID;
 
-        await createReply(userID, text, id);
+        await postService.createReply(userId, postId, text);
         let added = false;
         mockDatabase.forEach((post) => {
-            if(post.itemID == id && post.replies.length > 0){
+            if (post.itemID === postId && post.replies.length > 0) {
                 added = true;
             }
         });
@@ -239,7 +265,7 @@ describe('checkLike test', () => {
         const like = 1;
         const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
 
-        await checkLike(like, id, userID);
+        await postService.checkLike(like, id, userID);
         let added = false;
         mockDatabase.forEach((post) => {
             if (post.itemID == id){
@@ -257,7 +283,7 @@ describe('checkLike test', () => {
         const like = -1;
         const userID = "f162b963-6b4e-4033-9159-2e0c13d78419";
 
-        await checkLike(like, id, userID);
+        await postService.checkLike(like, id, userID);
         let added = false;
         mockDatabase.forEach((post) => {
             if (post.itemID == id){
@@ -273,6 +299,54 @@ describe('checkLike test', () => {
             }
         });
         expect(added).toBeTruthy();
+    });
+});
+
+describe('Delete reply tests', () => {
+    it('Successful reply deletion', async () => {
+        mockDatabase[0].replies.push(mockReply1);
+        
+        const postId = mockPost1.itemID;
+        const replyId = mockReply1.itemID;
+
+        await postService.deleteReply(postId, replyId);
+        let isDeleted = true;
+        mockDatabase.forEach((post) => {
+            if (post.itemID === postId) {
+                post.replies.forEach((reply) => {
+                    if (reply.itemID === replyId) {
+                        isDeleted = false;
+                    }
+                })
+            }
+        });
+        expect(isDeleted).toBeTruthy();
+    });
+
+    it('Throws error when post is not found', async () => {
+        const postId = "invalid_postId";
+        const replyId = mockReply1.itemID;
+
+        let error;
+        try {
+            await postService.deleteReply(postId, replyId);
+        } catch(err) {
+            error = err;
+        }
+        expect(error.status).toEqual(400);
+    });
+
+    it('Throws error when reply is not found', async () => {
+        const postId = mockPost1.itemID;
+        const replyId = "invalid_replyId";
+
+        let error;
+        try {
+            await postService.deleteReply(postId, replyId);
+        } catch(err) {
+            error = err;
+        }
+        expect(error.status).toEqual(400);
     });
 });
 describe('checkTags test', () => {
