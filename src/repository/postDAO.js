@@ -114,7 +114,7 @@ async function updatePostFlag(id, flag) {
 async function getFlaggedPost(isFlagged) {
     const command = new QueryCommand({
         TableName,
-        IndexName: "class-isFlagged-index",
+        IndexName: flaggedIndex,
         KeyConditionExpression: "#class = :class AND #isFlagged = :isFlagged",
         ExpressionAttributeNames: {
             "#class": "class",
