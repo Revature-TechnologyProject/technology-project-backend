@@ -120,6 +120,7 @@ module.exports = {
     register,
     login,
     updateRole,
+    getUserById,
     updateUser,
     deleteUser
 };
