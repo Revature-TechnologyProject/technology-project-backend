@@ -40,7 +40,7 @@ const postOwnerOrAdminAuthenticate = async (req, res, next) => {
         res.locals.user = user;
         next();
     } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
+        return res.status(err.status).json({ message: err.message });
     }
 }
 
@@ -68,7 +68,7 @@ const replyOwnerOrAdminAuthenticate = async (req, res, next) => {
         res.locals.user = user;
         next();
     } catch (err) {
-        return res.status(401).json("Unauthorized Access, try relogging");
+        return res.status(err.status).json({ message: err.message });
     }
 }
 
