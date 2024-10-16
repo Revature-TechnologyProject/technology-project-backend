@@ -1,5 +1,5 @@
 const { PutCommand, GetCommand, UpdateCommand, QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
-const { TableName, runCommand, CLASS_POST } = require('../utilities/dynamoUtilities');
+const { TableName, runCommand, flaggedIndex, CLASS_POST } = require('../utilities/dynamoUtilities');
 
 async function sendPost(Item){
     const command = new PutCommand({
@@ -107,7 +107,7 @@ async function updatePostFlag(id, flag) {
 async function getFlaggedPost(isFlagged) {
     const command = new QueryCommand({
         TableName,
-        IndexName: "class-isFlagged-index",
+        IndexName: flaggedIndex,
         KeyConditionExpression: "#class = :class AND #isFlagged = :isFlagged",
         ExpressionAttributeNames: {
             "#class": "class",
