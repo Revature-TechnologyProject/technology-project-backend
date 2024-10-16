@@ -123,7 +123,6 @@ beforeAll(() => {
                 };
             }
         }
-    }); 
     });
     postDAO.scanPosts.mockImplementation(async () => {
         return {
@@ -354,7 +353,7 @@ describe('checkTags test', () => {
         const tag = ["rock"];
         let added = false;
 
-        const result = await checkTags(tag, 1);
+        const result = await postService.checkTags(tag, 1);
         added = (result.length == 1);
         expect(added).toBeTruthy();
     });
@@ -362,7 +361,7 @@ describe('checkTags test', () => {
         const tag = ["rap"];
         let added = false;
 
-        const result = await checkTags(tag, 1);
+        const result = await postService.checkTags(tag, 1);
         added = (result.length == 0)
         expect(added).toBeTruthy();
     });
@@ -370,7 +369,7 @@ describe('checkTags test', () => {
         const tag = ["rock","rap"];
         let added = false;
 
-        const result = await checkTags(tag, 0);
+        const result = await postService.checkTags(tag, 0);
         added = (result.length == 0);
         expect(added).toBeTruthy();
     });
@@ -378,7 +377,7 @@ describe('checkTags test', () => {
         const tag = ["rock","hip-hop"];
         let added = false;
 
-        const result = await checkTags(tag, 0);
+        const result = await postService.checkTags(tag, 0);
         added = (result.length == 1);
         expect(added).toBeTruthy();
     });
