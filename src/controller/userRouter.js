@@ -56,6 +56,17 @@ userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.valida
     }
 });
 
+userRouter.get("/:userId", async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await userService.getUserById(userId);
+        res.status(200).json({ user });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
 /**
  * Update a users' profile; request must come from owner of the account
  * Path Parameter

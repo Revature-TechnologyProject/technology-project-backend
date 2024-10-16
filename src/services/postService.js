@@ -1,16 +1,16 @@
 const uuid = require("uuid");
-const { throwIfError } = require('../utilities/dynamoUtilities');
+const { throwIfError, CLASS_POST } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
 
-async function createPost(userID, description, score, title){
-    const post = {class: "post", itemID: uuid.v4(), postedBy: userID, description, score, title, replies: [], likedBy: [], isFlagged: 0};
+const createPost = async (userId, description, score, title) => {
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, replies: [], likedBy: [], isFlagged: 0 };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
     return post;
 }
 
-async function updatePost(id, post, attributes) {
+const updatePost = async (id, post, attributes) => {
     const {description, title, score, isFlagged} = attributes;
     const error = {status: 400, message: ""};
     if (isFlagged !== undefined && (typeof(isFlagged) !== "number" || (isFlagged > 1 || isFlagged < 0))) {
@@ -44,15 +44,19 @@ async function updatePost(id, post, attributes) {
     return attributes;
 }
 
-async function getPost(id) {
-    const post = await postDAO.getPost(id);
-    if (!post.Item) {
-        throw {status: 400, message: `Post not found with id: ${id}`};
+const getPostById = async (postId) => {
+    const getPostResult = await postDAO.getPost(postId);
+    throwIfError(getPostResult);
+    const foundPost = getPostResult.Item;
+    if (!foundPost) {
+        throw {
+            status: 400, message: `Post not found with the id: ${postId}`
+        }
     }
-    return post;
+    return foundPost;
 }
 
-async function updatePostFlag(id, flag) {
+const updatePostFlag = async (id, flag) => {
     const error = {status: 400, message: ""};
     //Can't update, can only flag if not an admin or the poster
     if (flag === undefined) {
@@ -67,7 +71,7 @@ async function updatePostFlag(id, flag) {
     throwIfError(result);
 }
 
-async function getFlaggedPost(isFlagged) {
+const getFlaggedPost = async (isFlagged) => {
     if (isFlagged > 1 || isFlagged < 0) {
         throw {status: 400, message: "isFlagged must be 0 or 1"};
     }
@@ -76,24 +80,24 @@ async function getFlaggedPost(isFlagged) {
     return result.Items;
 }
 
-async function seePosts(){
+const seePosts = async () => {
     const posts = await postDAO.scanPosts();
     throwIfError(posts);
     return posts.Items;
 }
 
-async function createReply(userID, text, id){
-    const post = await postDAO.getPost(id);
+const createReply = async (userId, postId, description) => {
+    const post = await postDAO.getPost(postId);
     if (!post.Item) {
-        throw {status: 400, message: `Post ${id} doesn't exist`};
+        throw { status: 400, message: `Post ${postId} doesn't exist` };
     }
-    const reply = {postedBy: userID, description: text, itemID: uuid.v4()};
-    const data = await postDAO.sendReply(reply, id);
+    const reply = { itemID: uuid.v4(), postedBy: userId, description };
+    const data = await postDAO.sendReply(postId, reply);
     throwIfError(data);
     return reply;
 }
 
-async function checkLike(like, postID, userID){
+const checkLike = async (like, postID, userID) => {
     const userLike = {userID, like};
     const post = await postDAO.getPost(postID);
     if (!post.Item) {
@@ -119,13 +123,41 @@ async function checkLike(like, postID, userID){
     return postData;
 }
 
+const getReplyOfPost = async (postId, replyId) => {
+    const { replies } = await getPostById(postId);
+    const foundReply = replies.find((reply) => reply.itemID === replyId);
+    if (!foundReply) {
+        throw { status: 400, message: `Reply ${replyId} doesn't exist` }
+    }
+    return foundReply;
+}
+
+const deletePost = async (postId) => {
+    await getPostById(postId);
+
+    const deleteResult = await postDAO.deletePost(postId);
+    throwIfError(deleteResult);
+}
+
+const deleteReply = async (postId, replyId) => {
+    await getReplyOfPost(postId, replyId);
+    
+    const { replies } = await getPostById(postId);
+    const newReplies = replies.filter((reply) => reply.itemID !== replyId); // tried using splice() but for some reason does not work
+    const data = await postDAO.updateReplies(postId, newReplies);
+    throwIfError(data);
+}
+
 module.exports = {
     createPost,
     updatePost,
-    getPost,
+    getPostById,
     updatePostFlag,
     getFlaggedPost,
-    createReply,
     seePosts,
-    checkLike
+    createReply,
+    checkLike,
+    getReplyOfPost,
+    deletePost,
+    deleteReply
 };
