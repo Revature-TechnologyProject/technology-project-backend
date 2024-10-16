@@ -10,7 +10,7 @@ const authenticate = (req, res, next) => {
         const user = jwt.verify(token, process.env.JWT_SECRET);
         res.locals.user = user;
         next();
-    } catch (err) {
+    } catch {
         return res.status(401).json("Unauthorized Access, try relogging");
     }
 }
@@ -27,7 +27,7 @@ const adminAuthenticate = (req, res, next) => {
         }
         res.locals.user = user;
         next();
-    } catch (err) {
+    } catch {
         return res.status(401).json("Unauthorized Access, try relogging");
     }
 }
