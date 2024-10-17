@@ -56,6 +56,14 @@ userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.valida
     }
 });
 
+/**
+ * Gets a user by their id
+ * Path Parameter
+ *      :userId {string}
+ * Response
+ *      200 - Successfully received the user by their id
+ *      400 - User with id ${userId} not found
+ */
 userRouter.get("/:userId", async (req, res) => {
     const { userId } = req.params;
 
