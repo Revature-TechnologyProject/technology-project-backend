@@ -2,8 +2,14 @@ const uuid = require("uuid");
 const { throwIfError, CLASS_POST } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
 
-const createPost = async (userId, description, score, title) => {
-    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, replies: [], likedBy: [], isFlagged: 0 };
+const createPost = async (userId, description, score, title, tags) => {
+    let tagMap = new Map();
+    if (tags){
+        for (const i of tags){
+            tagMap.set(i, true);
+        }
+    }
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
@@ -148,6 +154,43 @@ const deleteReply = async (postId, replyId) => {
     throwIfError(data);
 }
 
+const checkTags = async (tags, inclusive) => {
+    const posts = await postDAO.scanPosts();
+    throwIfError(posts);
+    if (!tags){
+        return posts.Items;
+    }
+    const postSet = new Set();
+    if (inclusive == 1){
+        for (const post of posts.Items){
+            for (const i of tags){
+                if (!post.tags){
+                    break;
+                }
+                if (post.tags.has(i)){
+                    postSet.add(post);
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        for (const post of posts.Items){
+            let should = true;
+            for (const i of tags){
+                if (!post.tags || !post.tags.has(i)){
+                    should = false;
+                    break;
+                }
+            }
+            if (should){
+                postSet.add(post);
+            }
+        }
+    }
+    return [...postSet];
+}
+
 module.exports = {
     createPost,
     updatePost,
@@ -159,5 +202,6 @@ module.exports = {
     checkLike,
     getReplyOfPost,
     deletePost,
-    deleteReply
+    deleteReply,
+    checkTags
 };

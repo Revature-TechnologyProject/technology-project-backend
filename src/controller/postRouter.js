@@ -12,16 +12,17 @@ const postRouter = express.Router();
  *      title {string}
  *      score {number}
  *      text {string}
+ *      tags {string,string,...}
  * Response
  *      200 - Post successfully created
  */
 postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
-    const { text, score, title } = req.body;
+    const { text, score, title, tags } = req.body;
 
     try {
-        const post = await postService.createPost(userId, text, score, title);
+        const post = await postService.createPost(userId, text, score, title, tags);
         res.status(201).json({
             message: `Post successfully created`,
             post
@@ -104,6 +105,17 @@ postRouter.get("/", async (req, res) => {
         } catch (err) {
             handleServiceError(err, res);
         }
+    }
+});
+
+postRouter.get("/tags", async (req, res) => {
+    try {
+        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
+        res.status(200).json({
+            Posts: posts
+        });
+    } catch (err) {
+        handleServiceError(err, res);
     }
 });
 

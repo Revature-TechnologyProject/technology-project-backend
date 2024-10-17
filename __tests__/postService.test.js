@@ -13,7 +13,8 @@ const mockPost1 = {
     score: 50,
     title: "Title",
     replies: [],
-    likedBy: []
+    likedBy: [],
+    tags: new Map([["rock",true], ["hip-hop",true]])
 };
 const mockPost2 = {
     class: CLASS_POST,
@@ -23,7 +24,8 @@ const mockPost2 = {
     score: 100,
     title: "Title",
     replies: [],
-    likedBy: []
+    likedBy: [],
+    tags: new Map([["drill",true]])
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
@@ -73,6 +75,16 @@ beforeAll(() => {
     postDAO.sendLike.mockImplementation(async (like, id) =>{
         const post = await postDAO.getPost(id);
         post.Item.likedBy.push(like);
+        post.Item.replies.push(reply);
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            }
+        };
+    });
+    postDAO.sendLike.mockImplementation(async (like, id) =>{
+        const post = await postDAO.getPost(id);
+        post.Item.likedBy.push(like);
         for (let i = 0; i < mockDatabase.length; i++){
             if (mockDatabase[i].itemID == post.Item.itemID){
                 mockDatabase[i].likedBy = post.Item.likedBy;
@@ -111,7 +123,15 @@ beforeAll(() => {
                 };
             }
         }
-    }); 
+    });
+    postDAO.scanPosts.mockImplementation(async () => {
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            },
+            Items: mockDatabase
+        };
+    });
 });
 
 beforeEach(() => {
@@ -125,6 +145,7 @@ beforeEach(() => {
     postDAO.sendLike.mockClear();
     postDAO.removeLike.mockClear();
     postDAO.updateReplies.mockClear();
+    postDAO.scanPosts.mockClear();
 });
 
 describe('createPost test', () => {
@@ -325,5 +346,39 @@ describe('Delete reply tests', () => {
             error = err;
         }
         expect(error.status).toEqual(400);
+    });
+});
+describe('checkTags test', () => {
+    it('Successful search on rock (inclusive)', async () => {
+        const tag = ["rock"];
+        let added = false;
+
+        const result = await postService.checkTags(tag, 1);
+        added = (result.length == 1);
+        expect(added).toBeTruthy();
+    });
+    it('Bad search on rap (inclusive)', async () => {
+        const tag = ["rap"];
+        let added = false;
+
+        const result = await postService.checkTags(tag, 1);
+        added = (result.length == 0)
+        expect(added).toBeTruthy();
+    });
+    it('Bad search on rock (non-inclusive)', async () => {
+        const tag = ["rock","rap"];
+        let added = false;
+
+        const result = await postService.checkTags(tag, 0);
+        added = (result.length == 0);
+        expect(added).toBeTruthy();
+    });
+    it('Successful search on rock (non-inclusive)', async () => {
+        const tag = ["rock","hip-hop"];
+        let added = false;
+
+        const result = await postService.checkTags(tag, 0);
+        added = (result.length == 1);
+        expect(added).toBeTruthy();
     });
 });
