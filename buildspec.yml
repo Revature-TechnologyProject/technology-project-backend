@@ -5,6 +5,8 @@ phases:
       nodejs: 20
     commands:
       - npm install
+      - npm test
+      - npm eslint
 artifacts:
   files:
     - '**/*'
