@@ -14,6 +14,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // Routes
+app.get("/", () => {
+    res.send("Test");
+})
 app.use("/users", userRouter);
 app.use("/posts", postRouter);
 app.use("/songs", songRouter);
