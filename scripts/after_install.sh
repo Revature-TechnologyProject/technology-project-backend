@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /home/ubuntu/MyExpressApp
+cd /home/ubuntu/app
 npm install
