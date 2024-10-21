@@ -1,5 +1,8 @@
 const { PutCommand, QueryCommand, DeleteCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 const { TableName, UsernameIndex, CLASS_USER, runCommand } = require('../utilities/dynamoUtilities');
+const { Upload } = require("@aws-sdk/lib-storage");
+const { S3Client } = require("@aws-sdk/client-s3");
+const uuid = require("uuid");
 
 async function putUser(Item) {
     const command = new PutCommand({
@@ -92,6 +95,27 @@ const deleteUser = async (id) => {
     await runCommand(command);
 }
 
+async function uploadImage(imageBuffer, extension) {
+    const parallelUploads3 = new Upload({
+        client: new S3Client({region: "us-east-2"}),
+        params: { Bucket: "techprojectmedia", Key: `images/${uuid.v4()}.${extension}`, Body: imageBuffer },
+        queueSize: 4,
+        partSize: 1024 * 1024 * 5,
+        leavePartsOnError: false,
+      });
+      parallelUploads3.on("httpUploadProgress", (progress) => {
+        console.log(progress);
+      });
+      try {
+        const {Location} = await parallelUploads3.done();
+        return {url: Location};
+      } catch (err) {
+        // Some S3 error occured
+        console.error(err);
+        return Promise.reject({status: 502, message: "Upstream server error"})
+      }
+}
+
 module.exports = {
     putUser,
     queryByUsername,
@@ -99,4 +123,5 @@ module.exports = {
     updateUser,
     updateRole,
     deleteUser,
+    uploadImage,
 };

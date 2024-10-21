@@ -146,6 +146,23 @@ userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, as
     }
 });
 
+userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
+    const {id} = req.params;
+    const {image, extension} = req.body;
+    const {profileImage} = res.locals.user;
+    const splitURL = profileImage.split("/");
+    const imageKey = splitURL.slice(splitURL.length - 2, splitURL.length).join("/");
+    const buffer = Buffer.from(image, "base64");
+    try {
+        // 3 steps, Upload to S3, update user info with url, delete old image from bucket if not default image
+        const {url} = await userService.uploadImage(buffer, extension);
+        return res.status(200).json({updatedImageURL: url});
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+    res.status(200).json("Yes");
+});
+
 module.exports = {
     userRouter
 };

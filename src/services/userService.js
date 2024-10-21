@@ -120,11 +120,16 @@ function createToken(user) {
     return token;
 }
 
+async function uploadImage(imageBuffer, extension) {
+    return await userDAO.uploadImage(imageBuffer, extension);
+}
+
 module.exports = {
     register,
     login,
     updateRole,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
+    uploadImage,
 };
