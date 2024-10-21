@@ -28,14 +28,14 @@ const replyOwnerOrAdminAuthenticate = () => {
 
 const accountOwnerAuthenticate = () => {
     return isAuthorized((user, req) => {
-        const userId = req.params.id;
+        const userId = req.params.userId;
         return userId === user.itemID;
     }, "Unauthorized Access - Wrong User");
 };
 
 const postOwnerAuthenticate = () => {
     return isAuthorized(async (user, req) => {
-        const postId = req.params.id;
+        const { postId } = req.params;
         const post = await postService.getPostById(postId);
         const postOwner = await userService.getUserById(post.postedBy);
 

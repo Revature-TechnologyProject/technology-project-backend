@@ -131,15 +131,15 @@ postRouter.get("/", async (req, res) => {
  *      200 - Replied to ${id} successfully
  *      400 - Post ${id} not found
  */
-postRouter.patch("/:id/replies", authMiddleware.authenticate(), postMiddleware.validateTextBody(), async (req, res) => {
+postRouter.patch("/:postId/replies", authMiddleware.authenticate(), postMiddleware.validateTextBody(), async (req, res) => {
     //TODO check song title exists in API
-    const { id } = req.params;
+    const { postId } = req.params;
     const { text } = req.body;
 
     try {
-        const reply = await postService.createReply(res.locals.user.itemID, text, id);
+        const reply = await postService.createReply(res.locals.user.itemID, text, postId);
         res.status(200).json({
-            message: `Replied to ${id} successfully`,
+            message: `Replied to ${postId} successfully`,
             reply: reply
         });
     } catch (err) {
@@ -157,33 +157,6 @@ postRouter.get("/tags", async (req, res) => {
         handleServiceError(err, res);
     }
 });
-
-/**
- * Update an existing post; request must come from owner of the post
- * Path Parameter
- *      :id {string} - The id of the post being updated
- * Request Body
- *      title {string}
- *      score {number}
- *      description {string}
- * Response
- *      200 - Updated post
- *          postId {string}
- *      400 - Post ${id} not found
- */
-postRouter.patch("/:id", authMiddleware.postOwnerAuthenticate(), postMiddleware.validateTitle(false), postMiddleware.validateScore(false), postMiddleware.validateTextBody(false),
-    async (req, res) => {
-        const { id } = req.params;
-        const { title, score, description } = req.body;
-
-        try {
-            await postService.updatePost(id, title, score, description);
-            return res.status(200).json({ message: "Updated post", data: id });
-        } catch (err) {
-            handleServiceError(err, res);
-        }
-    }
-);
 
 /**
 
