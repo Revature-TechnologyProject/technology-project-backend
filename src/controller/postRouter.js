@@ -72,6 +72,18 @@ postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => 
     }
 });
 
+postRouter.get("/tags", async (req, res) => {
+    console.log("tags");
+    try {
+        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
+        res.status(200).json({
+            Posts: posts
+        });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
 /**
  * Gets a post by their id
  * Path Parameter
@@ -141,17 +153,6 @@ postRouter.patch("/:postId/replies", authMiddleware.authenticate(), postMiddlewa
         res.status(200).json({
             message: `Replied to ${postId} successfully`,
             reply: reply
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
-postRouter.get("/tags", async (req, res) => {
-    try {
-        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
-        res.status(200).json({
-            Posts: posts
         });
     } catch (err) {
         handleServiceError(err, res);
