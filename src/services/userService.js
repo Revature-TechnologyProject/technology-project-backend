@@ -19,7 +19,8 @@ const register = async (username, password) => {
         password,
         role: "user",
         bio: "",
-        genres: []
+        genres: [],
+        profileImage: "https://techprojectmedia.s3.us-east-2.amazonaws.com/images/defaultImage.png"
     }
     const result = await userDAO.putUser(user);
     throwIfError(result);
