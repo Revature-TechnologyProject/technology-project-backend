@@ -135,31 +135,6 @@ postRouter.get("/", async (req, res) => {
 });
 
 /**
- * Add a reply to an existing post
- * Request Body
- *      id {string}
- *      text {string}
- * Response
- *      200 - Replied to ${id} successfully
- *      400 - Post ${id} not found
- */
-postRouter.patch("/:postId/replies", authMiddleware.authenticate(), postMiddleware.validateTextBody(), async (req, res) => {
-    //TODO check song title exists in API
-    const { postId } = req.params;
-    const { text } = req.body;
-
-    try {
-        const reply = await postService.createReply(res.locals.user.itemID, text, postId);
-        res.status(200).json({
-            message: `Replied to ${postId} successfully`,
-            reply: reply
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
-/**
 
  * Add a reply to an existing post
  * Path Parameter

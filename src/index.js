@@ -14,9 +14,11 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // Routes
+app.get("/", (req, res) => {
+    res.send("Test");
+})
 app.use("/users", userRouter);
 app.use("/posts", postRouter);
 app.use("/songs", songRouter);
-
 
 app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`)); 
