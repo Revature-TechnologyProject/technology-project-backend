@@ -1,10 +1,30 @@
 const jwt = require("jsonwebtoken");
-const { getPostById } = require("../services/postService");
-const { getUserById } = require("../services/userService");
+const postService = require("../services/postService");
+const userService = require("../services/userService");
 
 const authenticate = () => {
     return isAuthorized(() => true, "");
 };
+
+const postOwnerOrAdminAuthenticate = () => {
+    return isAuthorized(async (user, req) => {
+        const userId = user.itemID;
+        const { postId } = req.params;
+
+        const foundPost = await postService.getPostById(postId);
+        return foundPost.postedBy === userId || user.role === "admin";
+    }, "Unauthorized access - Wrong User or Not Admin");
+}
+
+const replyOwnerOrAdminAuthenticate = () => {
+    return isAuthorized(async (user, req) => {
+        const userId = user.itemID;
+        const { postId, replyId } = req.params;
+
+        const foundReply = await postService.getReplyOfPost(postId, replyId);
+        return foundReply.postedBy === userId || user.role === "admin";
+    }, "Unauthorized access - Wrong User or Not Admin");
+}
 
 const accountOwnerAuthenticate = () => {
     return isAuthorized((user, req) => {
@@ -16,9 +36,9 @@ const accountOwnerAuthenticate = () => {
 const postOwnerAuthenticate = () => {
     return isAuthorized(async (user, req) => {
         const postId = req.params.id;
-        const post = await getPostById(postId);
-        const postOwner = await getUserById(post.postedBy);
-    
+        const post = await postService.getPostById(postId);
+        const postOwner = await userService.getUserById(post.postedBy);
+
         return postOwner.itemID === user.itemID;
     }, "Unauthorized Access - Wrong User");
 };
@@ -54,4 +74,11 @@ function getToken(req) {
     return token;
 }
 
-module.exports = { authenticate, accountOwnerAuthenticate, postOwnerAuthenticate, adminAuthenticate };
+module.exports = {
+    authenticate,
+    postOwnerOrAdminAuthenticate,
+    replyOwnerOrAdminAuthenticate,
+    accountOwnerAuthenticate,
+    postOwnerAuthenticate,
+    adminAuthenticate
+};

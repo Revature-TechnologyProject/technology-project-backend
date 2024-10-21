@@ -57,6 +57,25 @@ userRouter.post("/login", userMiddleware.validateUsername(), userMiddleware.vali
 });
 
 /**
+ * Gets a user by their id
+ * Path Parameter
+ *      :userId {string}
+ * Response
+ *      200 - Successfully received the user by their id
+ *      400 - User with id ${userId} not found
+ */
+userRouter.get("/:userId", async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await userService.getUserById(userId);
+        res.status(200).json({ user });
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+/**
  * Update a users' profile; request must come from owner of the account
  * Path Parameter
  *      :userId {string} - The id of the user being updated
@@ -70,12 +89,12 @@ userRouter.post("/login", userMiddleware.validateUsername(), userMiddleware.vali
  *      400 - User with id ${userId} not found
  *      401 - Unauthorized access - wrong user
  */
-userRouter.put("/:id", authMiddleware.accountOwnerAuthenticate(), async (req, res) => {
-    const { id } = req.params;
+userRouter.put("/:userId", authMiddleware.accountOwnerAuthenticate(), async (req, res) => {
+    const { userId } = req.params;
     const requestBody = req.body;
 
     try {
-        const updatedUser = await userService.updateUser(id, requestBody);
+        const updatedUser = await userService.updateUser(userId, requestBody);
         res.status(200).json({message: "User has been updated", updatedUser});
     } catch (err) {
         handleServiceError(err, res);
@@ -85,16 +104,16 @@ userRouter.put("/:id", authMiddleware.accountOwnerAuthenticate(), async (req, re
 /**
  * Delete user from the database
  * Path Parameters
- *      :id {string}
+ *      :userId {string}
  * Response
  *      200 - Deleted user
  *          data - the id of the deleted user
  */
-userRouter.delete("/:id", authMiddleware.adminAuthenticate(), async (req, res) => {
-    const { id } = req.params;
+userRouter.delete("/:userId", authMiddleware.adminAuthenticate(), async (req, res) => {
+    const { userId } = req.params;
     try {
-        await userService.deleteUser(id);
-        return res.status(200).json({message: "Deleted user", data: id});
+        await userService.deleteUser(userId);
+        return res.status(200).json({message: "Deleted user", data: userId});
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -103,20 +122,20 @@ userRouter.delete("/:id", authMiddleware.adminAuthenticate(), async (req, res) =
 /**
  * Changes the role of a user
  * Path Parameters
- *      :id {string}
+ *      :userId {string}
  * Request Body
  *      role {string}
  * Response
  *      200 - User role changed to ${role}
- *      400 - User with id ${id} not found
+ *      400 - User with id ${userId} not found
  *      400 - User is already role ${role}
  *      400 - Cannot demote admin, use AWS console instead
  */
-userRouter.patch("/:id/role", authMiddleware.adminAuthenticate(), userMiddleware.validateRole(), async (req, res) => {
-    const { id } = req.params;
+userRouter.patch("/:userId/role", authMiddleware.adminAuthenticate(), userMiddleware.validateRole(), async (req, res) => {
+    const { userId } = req.params;
     const { role } = req.body;
     try {
-        await userService.updateRole(id, role);
+        await userService.updateRole(userId, role);
         return res.status(200).json({ message: `User role changed to ${role}` });
     } catch (err) {
         handleServiceError(err, res);

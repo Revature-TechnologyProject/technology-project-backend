@@ -9,10 +9,10 @@ const sendPost = async (Item) => {
     return await runCommand(command);
 };
 
-const sendReply = async (reply, id) => {
+const sendReply = async (reply, postId) => {
     const command = new UpdateCommand({
         TableName,
-        Key: { "class": CLASS_POST, "itemID": id },
+        Key: { "class": CLASS_POST, "itemID": postId },
         ExpressionAttributeValues: {
             ":reply": [reply]
         },
@@ -33,49 +33,37 @@ const scanPosts = async () => {
             ":class": CLASS_POST
         }
     })
-    return await runCommand(command);
+    const response = await runCommand(command);
+    return response;
 };
 
-const getPost = async (id) => {
+const getPost = async (postId) => {
     const command = new GetCommand({
         TableName,
-        Key: { class: CLASS_POST, itemID: id }
+        Key: { class: CLASS_POST, itemID: postId }
     });
     return await runCommand(command);
-}
+};
 
-const sendLike = async (like, id) => {
-    const command = new UpdateCommand({
+const getFlaggedPost = async (isFlagged) => {
+    const command = new QueryCommand({
         TableName,
-        Key: { "class": CLASS_POST, "itemID": id },
-        ExpressionAttributeValues: {
-            ":r": [like]
+        IndexName: flaggedIndex,
+        KeyConditionExpression: "#class = :class AND #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#class": "class",
+            "#isFlagged": "isFlagged"
         },
-        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
-}
-
-async function removeLike(index, id) {
-    const command = new UpdateCommand({
-        TableName,
-        Key: { "class": CLASS_POST, "itemID": id },
-        UpdateExpression: "REMOVE likedBy[" + index + "]",
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
+        ExpressionAttributeValues: {
+            ":isFlagged": isFlagged,
+            ":class": CLASS_POST
+        }
+    })
+    const result = await runCommand(command);
+    return result
 };
 
-const deletePost = async (id) => {
-    const command = new DeleteCommand({
-        TableName,
-        Key: { class: CLASS_POST, itemID: id }
-    });
-    return await runCommand(command);
-};
-
-async function updatePost(id, attributes) {
+const updatePost = async (id, attributes) => {
     const command = new UpdateCommand({
         TableName,
         Key: {class: CLASS_POST, itemID: id},
@@ -94,9 +82,9 @@ async function updatePost(id, attributes) {
         }
     })
     return await runCommand(command);
-}
+};
 
-async function updatePostFlag(id, flag) {
+const updatePostFlag = async (id, flag) => {
     const command = new UpdateCommand({
         TableName,
         Key: {class: CLASS_POST, itemID: id},
@@ -109,25 +97,51 @@ async function updatePostFlag(id, flag) {
         }
     })
     return await runCommand(command);
-}
+};
 
-async function getFlaggedPost(isFlagged) {
-    const command = new QueryCommand({
+const updateReplies = async (postId, replies) => {
+    const command = new UpdateCommand({
         TableName,
-        IndexName: flaggedIndex,
-        KeyConditionExpression: "#class = :class AND #isFlagged = :isFlagged",
-        ExpressionAttributeNames: {
-            "#class": "class",
-            "#isFlagged": "isFlagged"
-        },
+        Key: { "class": CLASS_POST, "itemID": postId },
+        UpdateExpression: "SET replies = :replies",
         ExpressionAttributeValues: {
-            ":isFlagged": isFlagged,
-            ":class": CLASS_POST
-        }
-    })
-    const result = await runCommand(command);
-    return result
-}
+            ":replies": replies
+        },
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
+
+const sendLike = async (like, id) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": id },
+        ExpressionAttributeValues: {
+            ":r": [like]
+        },
+        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
+
+const removeLike = async (index, id) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: {"class": CLASS_POST, "itemID": id},
+        UpdateExpression: "REMOVE likedBy["+index+"]",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
+
+const deletePost = async (postId) => {
+    const command = new DeleteCommand({
+        TableName,
+        Key: { class: CLASS_POST, itemID: postId }
+    });
+    return await runCommand(command);
+};
 
 module.exports = {
     sendPost,
@@ -135,9 +149,10 @@ module.exports = {
     getPost,
     scanPosts,
     getFlaggedPost,
-    updatePost,
-    updatePostFlag,
     sendLike,
     removeLike,
+    updatePost,
+    updatePostFlag,
+    updateReplies,
     deletePost
 };
