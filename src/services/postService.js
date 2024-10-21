@@ -1,15 +1,17 @@
 const uuid = require("uuid");
 const { throwIfError, CLASS_POST } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
+const { getSongs } = require("./songService");
 
-const createPost = async (userId, description, score, title, tags) => {
+const createPost = async (userId, description, score, title, artist, tags) => {
     let tagMap = new Map();
     if (tags){
         for (const i of tags){
             tagMap.set(i, true);
         }
     }
-    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
+    const song = await getSongs({track: title, artist});
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, song, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
