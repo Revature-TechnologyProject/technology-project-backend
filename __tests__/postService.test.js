@@ -1,9 +1,11 @@
 const postService = require("../src/services/postService");
 const postDAO = require("../src/repository/postDAO");
 const { CLASS_POST } = require("../src/utilities/dynamoUtilities");
+const songService = require("../src/services/songService");
 
 jest.mock('../src/repository/postDAO');
 jest.mock("../src/utilities/dynamoUtilities");
+jest.mock('../src/services/songService');
 let mockDatabase = [];
 const mockPost1 = {
     class: CLASS_POST,
@@ -130,6 +132,14 @@ beforeAll(() => {
                 httpStatusCode: 200
             },
             Items: mockDatabase
+        };
+    });
+    songService.getSongs.mockImplementation(async (query, offset = 0) => {
+        return {
+            $metadata: {
+                httpStatusCode: 200
+            },
+            songs: [{name: query.track, artists: [{name: query.artist}]}]
         };
     });
 });
