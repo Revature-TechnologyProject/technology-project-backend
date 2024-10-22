@@ -149,7 +149,15 @@ userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, as
 /**
  * Updates the profile image of a user. Admins can change all users' images
  * 
+ * INPUT
  * params: id, ID of user to update
+ * body: {image: base64 string, extention: file extension string (jpg, png, etc)}
+ * 
+ * OUTPUT
+ * response: 200, {updatedImageURL: string}
+ * errors: 
+ *  400 - {message:"user not found with specified id", id: ${id}}
+ *  401 - {message: "You are not the account owner"}
  */
 userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
     const {id} = req.params;
@@ -169,7 +177,6 @@ userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser
     } catch (err) {
         handleServiceError(err, res);
     }
-    res.status(200).json("Yes");
 });
 
 module.exports = {
