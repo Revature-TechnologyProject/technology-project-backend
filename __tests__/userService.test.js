@@ -345,7 +345,6 @@ describe("Change User Role", () => {
 
 describe("Image updating tests", () => {
     test("uploading image on success", async () => {
-        //s3 bucket has a directory for images (.../images/fileName.jpg).
         const buffer = Buffer.from("test");
         const extension = "jpg";
 
