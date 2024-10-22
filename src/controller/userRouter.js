@@ -161,8 +161,11 @@ userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, as
  */
 userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
     const {id} = req.params;
-    const {image, extension} = req.body;
-    const buffer = Buffer.from(image, "base64");
+    const {image} = req.body;
+    const {data, mime} = image;
+    const extension = mime.split("/")[1];
+
+    const buffer = Buffer.from(data, "base64");
     try {
         // Since admins can change profile images for users, must get user by id to ensure you delete the right image
         const user = await userService.getUserById(id);
