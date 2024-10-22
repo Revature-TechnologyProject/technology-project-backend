@@ -111,7 +111,7 @@ async function uploadImage(imageBuffer, extension) {
       try {
         const {Location} = await parallelUploads3.done();
         return {url: Location};
-      } catch (err) {
+      } catch {
         // Some S3 error occured
         return Promise.reject({status: 502, message: "Upstream server error"})
       }
