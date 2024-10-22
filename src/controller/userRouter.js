@@ -98,8 +98,8 @@ userRouter.put("/:userId", authenticate, async (req, res) => {
     }
 
     try {
-        const {user, token} = await userService.updateUser(userId, requestBody);
-        res.status(200).json({message: `User ${userId} has been updated`, user, token});
+        const {updatedUser, updatedToken} = await userService.updateUser(userId, requestBody);
+        res.status(200).json({message: `User ${userId} has been updated`, updatedUser, updatedToken});
     } catch (err) {
         handleServiceError(err, res);
     }
