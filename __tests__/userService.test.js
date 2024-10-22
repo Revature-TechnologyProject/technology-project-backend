@@ -1,7 +1,7 @@
 const uuid = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const { register, login, updateRole, updateUser, addLike } = require('../src/services/userService');
+const { register, login, updateRole, updateUser, addLike, uploadImage, deleteImage } = require('../src/services/userService');
 const userDAO = require('../src/repository/userDAO');
 const { CLASS_USER } = require('../src/utilities/dynamoUtilities');
 
@@ -144,11 +144,11 @@ beforeEach(() => {
     mockDatabase.set(mockUser2.username, mockUser2);
     mockDatabase.set(mockUser3.username, mockUser3);
     mockDatabase.set(mockAdmin.username, mockAdmin);
-    userDAO.putUser.mockClear();
-    userDAO.queryByUsername.mockClear();
-    userDAO.getUserById.mockClear();
-    userDAO.updateUser.mockClear();
 });
+
+afterEach(() => {
+    jest.clearAllMocks();
+})
 
 describe("register", () => {
 
@@ -341,4 +341,46 @@ describe("Change User Role", () => {
         expect(error.status).toEqual(400);
     });
 
+});
+
+describe("Image updating tests", () => {
+    test("uploading image on success", async () => {
+        //s3 bucket has a directory for images (.../images/fileName.jpg).
+        const buffer = Buffer.from("test");
+        const extension = "jpg";
+
+        await uploadImage(buffer, extension);
+        expect(userDAO.uploadImage).toHaveBeenCalledWith(buffer, extension);
+    });
+
+    test("Bad extension", async () => {
+        const buffer = Buffer.from("test");
+        const extension = "txt";
+
+        const errorObject = {status: 400, message: "Invalid extension. Must be jpg, jpeg, png, or svg"};
+
+        try {
+            await uploadImage(buffer, extension)
+        } catch (err) {
+            expect(err).toEqual(errorObject);
+        }        
+    });
+
+    test("Valid delete image call", async () => {
+        // S3 Bucket has an image directory (.../images/file.jpg)
+        const user = {profileImage: "a/sd/as/da/da/this/matters.jpg"};
+        const key = "this/matters.jpg";
+
+        await deleteImage(user);
+
+        expect(userDAO.deleteImage).toHaveBeenCalledWith(key);
+    });
+
+    test("delete image should not delete the default image", async () => {
+        const user = {profileImage: "a/sd/as/da/da/images/defaultImage.png"};
+
+        await deleteImage(user);
+
+        expect(userDAO.deleteImage).not.toHaveBeenCalled();
+    })
 });

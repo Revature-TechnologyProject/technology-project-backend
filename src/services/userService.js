@@ -124,6 +124,9 @@ function createToken(user) {
 }
 
 async function uploadImage(imageBuffer, extension) {
+    if (extension !== "jpg" && extension !== "jpeg" && extension !== "png" && extension !== "svg") {
+        return Promise.reject({status:400, message: "Invalid extension. Must be jpg, jpeg, png, or svg"});
+    }
     return await userDAO.uploadImage(imageBuffer, extension);
 }
 
