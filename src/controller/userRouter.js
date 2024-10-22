@@ -146,16 +146,24 @@ userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, as
     }
 });
 
+/**
+ * Updates the profile image of a user. Admins can change all users' images
+ * 
+ * params: id, ID of user to update
+ */
 userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
     const {id} = req.params;
     const {image, extension} = req.body;
-    const {profileImage} = res.locals.user;
-    const splitURL = profileImage.split("/");
-    const imageKey = splitURL.slice(splitURL.length - 2, splitURL.length).join("/");
     const buffer = Buffer.from(image, "base64");
     try {
+        // Since admins can change profile images for users, must get user by id to ensure you delete the right image
+        const user = await userService.getUserById(id);
+        if (!user) {
+            return res.status(400).json({message:"user not found with specified id", id});
+        }
         // 3 steps, Upload to S3, update user info with url, delete old image from bucket if not default image
         const {url} = await userService.uploadImage(buffer, extension);
+        await userService.deleteImage(user); //Delete old image before updating info
         await userService.updateUser(id, {profileImage: url});
         return res.status(200).json({updatedImageURL: url});
     } catch (err) {

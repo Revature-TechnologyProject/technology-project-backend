@@ -1,7 +1,7 @@
 const { PutCommand, QueryCommand, DeleteCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 const { TableName, UsernameIndex, CLASS_USER, runCommand } = require('../utilities/dynamoUtilities');
 const { Upload } = require("@aws-sdk/lib-storage");
-const { S3Client } = require("@aws-sdk/client-s3");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const uuid = require("uuid");
 
 async function putUser(Item) {
@@ -113,9 +113,22 @@ async function uploadImage(imageBuffer, extension) {
         return {url: Location};
       } catch (err) {
         // Some S3 error occured
-        console.error(err);
         return Promise.reject({status: 502, message: "Upstream server error"})
       }
+}
+
+async function deleteImage(Key) {
+    const client = new S3Client({region: "us-east-2"});
+    const command = new DeleteObjectCommand({
+        Bucket: "techprojectmedia",
+        Key
+    });
+    try {
+        return await client.send(command);
+    } catch (err) {
+        console.log(err);
+        return Promise.reject({status: 502, message: "Upstream server error"});
+    }
 }
 
 module.exports = {
@@ -126,4 +139,5 @@ module.exports = {
     updateRole,
     deleteUser,
     uploadImage,
+    deleteImage,
 };

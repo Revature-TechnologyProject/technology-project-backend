@@ -127,6 +127,16 @@ async function uploadImage(imageBuffer, extension) {
     return await userDAO.uploadImage(imageBuffer, extension);
 }
 
+async function deleteImage(user) {
+    const {profileImage} = user;
+    const splitURL = profileImage.split("/");
+    const key = splitURL.slice(splitURL.length - 2, splitURL.length).join("/");
+    if (key === "images/defaultImage.png") {
+        return; // Dont delete the default image for all users
+    }
+    return await userDAO.deleteImage(key);
+}
+
 module.exports = {
     register,
     login,
@@ -135,4 +145,5 @@ module.exports = {
     updateUser,
     deleteUser,
     uploadImage,
+    deleteImage,
 };

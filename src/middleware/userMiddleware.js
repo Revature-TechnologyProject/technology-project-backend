@@ -26,8 +26,8 @@ function validateRole(req, res, next) {
 
 function validateUser(req, res, next) {
     const {id} = req.params;
-    const {itemID} = res.locals.user
-    if (id !== itemID) {
+    const {itemID, role} = res.locals.user
+    if (role !== "admin" && id !== itemID) {
         return res.status(401).json({message: "You are not the account owner"})
     }
     next();
