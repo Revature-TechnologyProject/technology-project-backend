@@ -70,16 +70,18 @@ async function updateUser(userId, requestBody) {
             class: CLASS_USER,
             itemID: userId
         },
-        UpdateExpression: "set #username = :username, #bio = :bio, #genres = :genres",
+        UpdateExpression: "set #username = :username, #bio = :bio, #genres = :genres, #profileImage = :profileImage",
         ExpressionAttributeNames: {
             "#username": "username",
             "#bio": "bio",
-            "#genres": "genres"
+            "#genres": "genres",
+            "#profileImage": "profileImage",
         },
         ExpressionAttributeValues: {
             ":username": requestBody.username,
             ":bio": requestBody.bio,
-            ":genres": requestBody.genres
+            ":genres": requestBody.genres,
+            ":profileImage": requestBody.profileImage,
         },
         ReturnValues: "ALL_NEW"
     });

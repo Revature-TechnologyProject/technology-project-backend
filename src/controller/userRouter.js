@@ -156,6 +156,7 @@ userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser
     try {
         // 3 steps, Upload to S3, update user info with url, delete old image from bucket if not default image
         const {url} = await userService.uploadImage(buffer, extension);
+        await userService.updateUser(id, {profileImage: url});
         return res.status(200).json({updatedImageURL: url});
     } catch (err) {
         handleServiceError(err, res);

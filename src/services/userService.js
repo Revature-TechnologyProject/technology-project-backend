@@ -100,6 +100,9 @@ async function updateUser(userId, requestBody) {
     if (!requestBody.genres) {
         requestBody.genres = foundUser.genres //? foundUser.genres : [];
     }
+    if (!requestBody.profileImage) {
+        requestBody.profileImage = foundUser.profileImage
+    }
 
     const result = await userDAO.updateUser(userId, requestBody);
     throwIfError(result);
