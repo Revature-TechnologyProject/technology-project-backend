@@ -10,7 +10,26 @@ const createPost = async (userId, description, score, title, artist, tags) => {
             tagMap.set(i, true);
         }
     }
-    const song = await getSongs({track: title, artist});
+    const result = await getSongs({track: title, artist}, 0);
+    const songList = result.songs;
+    let song;
+    for (const s of songList){
+        if (s.name !== title){
+            continue;
+        }
+        for (const a of s.artists){
+            if (a.name.includes(artist)){
+                song = s;
+                break;
+            }
+        }
+        if (song){
+            break;
+        }
+    }
+    if (!song){
+        throw {status: 400, message: `${title} by ${artist} does not exist`};
+    }
     const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, song, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
