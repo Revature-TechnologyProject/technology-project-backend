@@ -162,9 +162,17 @@ userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, as
 userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
     const {id} = req.params;
     const {image} = req.body;
+    if (image === undefined) {
+        return res.status(400).json({message: "No image data provided in body. Should follow the format {image: {mime: string, data: string}}"});
+    }
     const {data, mime} = image;
+    if (!data || !mime) {
+        return res.status(400).json({message: "data and mime must be defined in image data"});
+    }
     const extension = mime.split("/")[1];
-
+    if (!extension) {
+        return res.status(400).json({message: "mime format incorrect. must follow 'image/<extension>'"});
+    }
     const buffer = Buffer.from(data, "base64");
     try {
         // Since admins can change profile images for users, must get user by id to ensure you delete the right image
@@ -172,9 +180,9 @@ userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser
         if (!user) {
             return res.status(400).json({message:"user not found with specified id", id});
         }
-        // 3 steps, Upload to S3, update user info with url, delete old image from bucket if not default image
+        // 3 steps, Upload to S3, delete old image from bucket if not default image, update user info with url
         const {url} = await userService.uploadImage(buffer, extension);
-        await userService.deleteImage(user); //Delete old image before updating info
+        await userService.deleteImage(user); //Delete old image before updating info otherwise link(used to get key) is lost
         await userService.updateUser(id, {profileImage: url});
         return res.status(200).json({updatedImageURL: url});
     } catch (err) {
