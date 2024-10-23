@@ -1,34 +1,13 @@
 const uuid = require("uuid");
 const { throwIfError, CLASS_POST } = require('../utilities/dynamoUtilities');
 const postDAO = require("../repository/postDAO");
-const { getSongs } = require("./songService");
 
-const createPost = async (userId, description, score, title, artist, tags) => {
+const createPost = async (userId, description, score, song, tags) => {
     let tagMap = new Map();
     if (tags){
         for (const i of tags){
             tagMap.set(i, true);
         }
-    }
-    const result = await getSongs({track: title, artist}, 0);
-    const songList = result.songs;
-    let song;
-    for (const s of songList){
-        if (s.name !== title){
-            continue;
-        }
-        for (const a of s.artists){
-            if (a.name.includes(artist)){
-                song = s;
-                break;
-            }
-        }
-        if (song){
-            break;
-        }
-    }
-    if (!song){
-        throw {status: 400, message: `${title} by ${artist} does not exist`};
     }
     const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, song, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
     const data = await postDAO.sendPost(post);
