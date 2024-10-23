@@ -78,8 +78,8 @@ async function getUserById(userId) {
     const result = await userDAO.getUserById(userId);
     throwIfError(result);
     const foundUser = result?.Item;
-    delete(foundUser.password);
-    delete(foundUser.class);
+    delete(foundUser?.password);
+    delete(foundUser?.class);
     return foundUser;
 }
 

@@ -1,13 +1,14 @@
 const uuid = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const { register, login, updateRole, updateUser, addLike, uploadImage, deleteImage } = require('../src/services/userService');
+const { register, login, updateRole, updateUser, addLike, uploadImage, deleteImage, getUserById } = require('../src/services/userService');
 const userDAO = require('../src/repository/userDAO');
-const { CLASS_USER } = require('../src/utilities/dynamoUtilities');
+const { CLASS_USER, throwIfError } = require('../src/utilities/dynamoUtilities');
 
 jest.mock('bcrypt');
 jest.mock("jsonwebtoken");
 jest.mock('../src/repository/userDAO');
+jest.mock("../src/utilities/dynamoUtilities")
 
 const mockDatabase = new Map();
 const mockUser1 = {
@@ -278,6 +279,7 @@ describe("Update User Profile Tests", () => {
         }
 
         expect(error.status).toEqual(400);
+        // expect(error.message).toBe("blank")
     });
 });
 
