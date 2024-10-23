@@ -22,7 +22,7 @@ function handleServiceError(error, res) {
 function validateBody(propertyName, isValidCallback, required = true) {
     return (req, res, next) => {
         const param = req.body[propertyName];
-        const exists = req.body.hasOwnProperty(propertyName);
+        const exists = propertyName in req.body;
         if (!exists && required) {
             return res.status(400).json({
                 message: `Missing required property ${propertyName}`
