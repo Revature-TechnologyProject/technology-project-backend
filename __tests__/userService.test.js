@@ -144,10 +144,7 @@ beforeEach(() => {
     mockDatabase.set(mockUser2.username, structuredClone(mockUser2));
     mockDatabase.set(mockUser3.username, structuredClone(mockUser3));
     mockDatabase.set(mockAdmin.username, structuredClone(mockAdmin));
-    userDAO.putUser.mockClear();
-    userDAO.queryByUsername.mockClear();
-    userDAO.getUserById.mockClear();
-    userDAO.updateUser.mockClear();
+    jest.clearAllMocks();
 });
 
 describe("register", () => {

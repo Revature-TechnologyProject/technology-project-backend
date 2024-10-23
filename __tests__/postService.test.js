@@ -170,15 +170,7 @@ beforeEach(() => {
     mockDatabase = [];
     mockDatabase.push(structuredClone(mockPost1));
     mockDatabase.push(structuredClone(mockPost2));
-    postDAO.sendPost.mockClear();
-    postDAO.sendReply.mockClear();
-    postDAO.scanPosts.mockClear();
-    postDAO.getPost.mockClear();
-    postDAO.sendLike.mockClear();
-    postDAO.updatePost.mockClear();
-    postDAO.updateReplies.mockClear();
-    postDAO.removeLike.mockClear();
-    postDAO.deletePost.mockClear();
+    jest.clearAllMocks();
 });
 
 describe('createPost test', () => {

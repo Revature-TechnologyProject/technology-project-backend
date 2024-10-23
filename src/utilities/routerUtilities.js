@@ -1,3 +1,5 @@
+const { isValidString } = require("./stringUtilities");
+
 function handleServiceError(error, res) {
     console.error(error);
 
@@ -20,20 +22,26 @@ function handleServiceError(error, res) {
 function validateBody(propertyName, isValidCallback, required = true) {
     return (req, res, next) => {
         const param = req.body[propertyName];
-        if (!param && required) {
+        const exists = req.body.hasOwnProperty(propertyName);
+        if (!exists && required) {
             return res.status(400).json({
                 message: `Missing required property ${propertyName}`
             });
-        } else if (param && !isValidCallback(param)) {
+        } else if (exists && !isValidCallback(param)) {
             return res.status(400).json({
                 message: `Invalid property ${propertyName}`
             });
         }
         next();
-    }
+    };
+}
+
+function validateBodyString(propertyName, required = true) {
+    return validateBody(propertyName, (property) => isValidString(property), required);
 }
 
 module.exports = {
     handleServiceError,
-    validateBody
+    validateBody,
+    validateBodyString
 };

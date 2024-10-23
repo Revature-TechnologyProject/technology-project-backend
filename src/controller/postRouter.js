@@ -1,8 +1,7 @@
 const express = require('express');
-const { handleServiceError } = require('../utilities/routerUtilities');
+const { handleServiceError, validateBody, validateBodyString } = require('../utilities/routerUtilities');
 const postService = require('../services/postService');
 const authMiddleware = require("../middleware/authMiddleware");
-const postMiddleware = require('../middleware/postMiddleware');
 
 const postRouter = express.Router();
 
@@ -16,21 +15,26 @@ const postRouter = express.Router();
  * Response
  *      201 - Post successfully created
  */
-postRouter.post("/", authMiddleware.authenticate(), postMiddleware.validateTextBody(), postMiddleware.validateScore(), postMiddleware.validateTitle(), async (req, res) => {
-    //TODO check song title exists in API
-    const userId = res.locals.user.itemID;
-    const { text, score, title, tags } = req.body;
+postRouter.post("/", authMiddleware.authenticate(),
+    validateBodyString("text"),
+    validateBody("score", (score) => !isNaN(score) && score >= 0 && score <= 100),
+    validateBodyString("title"),
+    async (req, res) => {
+        //TODO check song title exists in API
+        const userId = res.locals.user.itemID;
+        const { text, score, title, tags } = req.body;
 
-    try {
-        const post = await postService.createPost(userId, text, score, title, tags);
-        res.status(201).json({
-            message: `Post successfully created`,
-            post
-        });
-    } catch (err) {
-        handleServiceError(err, res);
+        try {
+            const post = await postService.createPost(userId, text, score, title, tags);
+            res.status(201).json({
+                message: `Post successfully created`,
+                post
+            });
+        } catch (err) {
+            handleServiceError(err, res);
+        }
     }
-});
+);
 
 /**
  * Updates/flags a post
@@ -73,7 +77,6 @@ postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => 
 });
 
 postRouter.get("/tags", async (req, res) => {
-    console.log("tags");
     try {
         const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
         res.status(200).json({
@@ -145,7 +148,7 @@ postRouter.get("/", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.patch("/:postId/replies", authMiddleware.authenticate(), postMiddleware.validateTextBody(), async (req, res) => {
+postRouter.patch("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { postId } = req.params;
@@ -162,24 +165,27 @@ postRouter.patch("/:postId/replies", authMiddleware.authenticate(), postMiddlewa
     }
 });
 
-postRouter.patch("/:postId/likes", authMiddleware.authenticate(), postMiddleware.validateLike(), async (req, res) => {
-    //TODO check song title exists in API
-    const { like } = req.body;
-    const { postId } = req.params;
-    const userId = res.locals.user.itemID;
+postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
+    validateBody("like", (like) => !isNaN(like) && (like == 1 || like == -1)),
+    async (req, res) => {
+        //TODO check song title exists in API
+        const { like } = req.body;
+        const { postId } = req.params;
+        const userId = res.locals.user.itemID;
 
-    try {
-        await postService.checkLike(like, postId, userId);
-        if (req.body.like == 1){
-            res.status(200).json({ message: `Liked post ${postId} successfully` });
+        try {
+            await postService.checkLike(like, postId, userId);
+            if (req.body.like == 1) {
+                res.status(200).json({ message: `Liked post ${postId} successfully` });
+            }
+            else {
+                res.status(200).json({ message: `Disliked post ${postId} successfully` });
+            }
+        } catch (err) {
+            handleServiceError(err, res);
         }
-        else {
-            res.status(200).json({ message: `Disliked post ${postId} successfully` });
-        }
-    } catch (err) {
-        handleServiceError(err, res);
     }
-});
+);
 
 /**
  * Deletes a post by their id
