@@ -89,7 +89,7 @@ userRouter.get("/:userId", async (req, res) => {
  *      400 - User with id ${userId} not found
  *      401 - Unauthorized access - wrong user
  */
-userRouter.put("/:userId", authenticate, async (req, res) => {
+userRouter.put("/:userId", authenticate, userMiddleware.validateUsername, async (req, res) => {
     const userId = req.params.userId;
     const requestBody = req.body;
 
