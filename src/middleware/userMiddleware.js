@@ -12,18 +12,11 @@ function validateUsername(req, res, next) {
 }
 
 function validatePassword(req, res, next) {
-    const format = `/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;`.split();
     if (isValidBodyProperty(req, res, "password")) {
         if (req.body.password.length < 6){
             return res.status(400).json({message: "Password must be at least 6 characters long"});
         }
-        let hasSpecial = false;
-        for (const f of format){
-            if (req.body.password.includes(f)){
-                hasSpecial = true;
-            }
-        }
-        if (!hasSpecial || !/\d/.test(req.body.password)){
+        if (!/[^A-Za-z0-9]/.test(req.body.password) || !/\d/.test(req.body.password)){
             return res.status(400).json({message: "Password must contain a special character and a number"});
         }
         next();
