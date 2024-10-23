@@ -4,8 +4,8 @@ const validRoles = ["user", "admin"];
 
 function validateUsername(req, res, next) {
     if (isValidBodyProperty(req, res, "username")) {
-        if (req.body.username.length < 5){
-            return res.status(400).json({message: "Username must be at least 5 characters long"});
+        if (req.body.username.length < 4){
+            return res.status(400).json({message: "Username must be at least 4 characters long"});
         }
         next();
     }
