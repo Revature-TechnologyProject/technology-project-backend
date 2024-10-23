@@ -163,9 +163,9 @@ describe('createPost test', () => {
         const userId = "95db201c-35bb-47d6-8634-8701a01f496a";
         const text = "Decent song";
         const score = 69;
-        const title = "Hello";
+        const song = "Hello";
 
-        const response = await postService.createPost(userId, text, score, title, artist);
+        const response = await postService.createPost(userId, text, score, song, artist);
         expect(response).toEqual(mockDatabase[mockDatabase.length - 1]);
     });
 });
