@@ -14,7 +14,7 @@ const mockPost1 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["rock",true], ["hip-hop",true]])
+    tags: {"rock": true, "hip-hop": true}
 };
 const mockPost2 = {
     class: CLASS_POST,
@@ -25,7 +25,7 @@ const mockPost2 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["drill",true]])
+    tags: {"drill": true}
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
