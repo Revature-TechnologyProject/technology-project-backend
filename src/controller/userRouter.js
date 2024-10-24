@@ -93,8 +93,8 @@ userRouter.put("/:userId", authMiddleware.accountOwnerAuthenticate(), async (req
     const requestBody = req.body;
 
     try {
-        const updatedUser = await userService.updateUser(userId, requestBody);
-        res.status(200).json({ message: "User has been updated", updatedUser });
+        const { updatedUser, updatedToken } = await userService.updateUser(userId, requestBody);
+        res.status(200).json({ message: `User ${userId} has been updated`, updatedUser, updatedToken });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -134,8 +134,8 @@ userRouter.patch("/:userId/role", authMiddleware.adminAuthenticate(), validateBo
     const { userId } = req.params;
     const { role } = req.body;
     try {
-        await userService.updateRole(userId, role);
-        return res.status(200).json({ message: `User role changed to ${role}` });
+        const token = await userService.updateRole(userId, role);
+        return res.status(200).json({ message: `User role changed to ${role}`, token });
     } catch (err) {
         handleServiceError(err, res);
     }

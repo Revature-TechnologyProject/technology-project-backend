@@ -109,9 +109,11 @@ const updateUser = async (userId, requestBody) => {
 
     const result = await userDAO.updateUser(userId, requestBody);
     throwIfError(result);
-    const updatedUser = result?.Attributes;
-    return updatedUser;
-};
+    const updatedUser = await userDAO.getUserById(userId);
+    throwIfError(updatedUser);
+    const updatedToken = createToken(updatedUser);
+    return {updatedUser, updatedToken};
+}
 
 const deleteUser = async (id) => {
     // Maybe add user exist check here, but not needed since dynamo wont error out with a not found id
@@ -120,7 +122,9 @@ const deleteUser = async (id) => {
 
 function createToken(user) {
     // Delete unneccesarry attributes as needed here
-    delete (user.password);
+    if (Object.hasOwn(user, "password")){
+        delete (user.password);
+    }
 
     const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1d" });
     return token;
