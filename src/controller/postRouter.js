@@ -1,8 +1,7 @@
 const express = require('express');
+const { handleServiceError, validateBody, validateBodyString } = require('../utilities/routerUtilities');
 const postService = require('../services/postService');
-const { handleServiceError } = require('../utilities/routerUtilities');
-const { authenticate, postOwnerOrAdminAuthenticate, replyOwnerOrAdminAuthenticate } = require("../middleware/authMiddleware");
-const postMiddleware = require('../middleware/postMiddleware');
+const authMiddleware = require("../middleware/authMiddleware");
 
 const postRouter = express.Router();
 
@@ -14,25 +13,44 @@ const postRouter = express.Router();
  *      text {string}
  *      tags {string,string,...}
  * Response
- *      200 - Post successfully created
+ *      201 - Post successfully created
  */
-postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
-    //TODO check song title exists in API
-    const userId = res.locals.user.itemID;
-    const { text, score, title, tags } = req.body;
+postRouter.post("/", authMiddleware.authenticate(),
+    validateBodyString("text"),
+    validateBody("score", (score) => !isNaN(score) && score >= 0 && score <= 100),
+    validateBodyString("title"),
+    async (req, res) => {
+        //TODO check song title exists in API
+        const userId = res.locals.user.itemID;
+        const { text, score, title, tags } = req.body;
 
-    try {
-        const post = await postService.createPost(userId, text, score, title, tags);
-        res.status(201).json({
-            message: `Post successfully created`,
-            post
-        });
-    } catch (err) {
-        handleServiceError(err, res);
+        try {
+            const post = await postService.createPost(userId, text, score, title, tags);
+            res.status(201).json({
+                message: `Post successfully created`,
+                post
+            });
+        } catch (err) {
+            handleServiceError(err, res);
+        }
     }
-});
+);
 
-postRouter.patch("/:postId", authenticate, async (req, res) => {
+/**
+ * Updates/flags a post
+ * Path Parameters
+ *      :postId {string}
+ * Response
+ *      200
+ *          postId - The id of the updated post
+ *          updated - The updated attributes of the post
+ *      400 - provided flag must be a number (0 or 1)
+ *      400 - No updatable attributes provided. Must provide description, title, flag, or score in body (flag is not valid if you are the poster)
+ *      400 - provided score must be of type number
+ *      400 - provided description must be of type string
+ *      400 - provided title must be of type string
+ */
+postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => {
     const { postId } = req.params;
     const { user } = res.locals;
     const userId = user.itemID;
@@ -53,6 +71,17 @@ postRouter.patch("/:postId", authenticate, async (req, res) => {
             const updated = await postService.updatePost(postId, post, { description: description, title: title, score: score, isFlagged: flag });
             return res.status(200).json({ postId, updated });
         }
+    } catch (err) {
+        handleServiceError(err, res);
+    }
+});
+
+postRouter.get("/tags", async (req, res) => {
+    try {
+        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
+        res.status(200).json({
+            Posts: posts
+        });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -108,18 +137,8 @@ postRouter.get("/", async (req, res) => {
     }
 });
 
-postRouter.get("/tags", async (req, res) => {
-    try {
-        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
-        res.status(200).json({
-            Posts: posts
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
 /**
+
  * Add a reply to an existing post
  * Path Parameter
  *      :postId {string}
@@ -129,7 +148,7 @@ postRouter.get("/tags", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBody, async (req, res) => {
+postRouter.patch("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { postId } = req.params;
@@ -146,24 +165,27 @@ postRouter.patch("/:postId/replies", authenticate, postMiddleware.validateTextBo
     }
 });
 
-postRouter.patch("/:postId/likes", authenticate, postMiddleware.validateLike, async (req, res) => {
-    //TODO check song title exists in API
-    const { like } = req.body;
-    const { postId } = req.params;
-    const userId = res.locals.user.itemID;
+postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
+    validateBody("like", (like) => !isNaN(like) && (like == 1 || like == -1)),
+    async (req, res) => {
+        //TODO check song title exists in API
+        const { like } = req.body;
+        const { postId } = req.params;
+        const userId = res.locals.user.itemID;
 
-    try {
-        await postService.checkLike(like, postId, userId);
-        if (req.body.like == 1){
-            res.status(200).json({ message: `Liked post ${postId} successfully` });
+        try {
+            await postService.checkLike(like, postId, userId);
+            if (req.body.like == 1) {
+                res.status(200).json({ message: `Liked post ${postId} successfully` });
+            }
+            else {
+                res.status(200).json({ message: `Disliked post ${postId} successfully` });
+            }
+        } catch (err) {
+            handleServiceError(err, res);
         }
-        else {
-            res.status(200).json({ message: `Disliked post ${postId} successfully` });
-        }
-    } catch (err) {
-        handleServiceError(err, res);
     }
-});
+);
 
 /**
  * Deletes a post by their id
@@ -173,7 +195,7 @@ postRouter.patch("/:postId/likes", authenticate, postMiddleware.validateLike, as
  *      200 - Successfully deleted the post by their id
  *      400 - Post with id ${postId} not found
  */
-postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => {
+postRouter.delete("/:postId", authMiddleware.postOwnerOrAdminAuthenticate(), async (req, res) => {
     const { postId } = req.params;
 
     try {
@@ -193,7 +215,7 @@ postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => 
  *      200 - Successfully deleted the reply by their id
  *      400 - Post with id ${postId} not found or reply with id ${replyId} not found
  */
-postRouter.delete("/:postId/replies/:replyId", replyOwnerOrAdminAuthenticate, async (req, res) => {
+postRouter.delete("/:postId/replies/:replyId", authMiddleware.replyOwnerOrAdminAuthenticate(), async (req, res) => {
     const { postId, replyId } = req.params;
 
     try {
