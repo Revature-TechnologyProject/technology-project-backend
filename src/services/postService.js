@@ -160,6 +160,7 @@ const checkTags = async (tags, inclusive) => {
     if (!tags){
         return posts.Items;
     }
+    tags = tags.split(',');
     const postSet = new Set();
     if (inclusive == 1){
         for (const post of posts.Items){
