@@ -76,17 +76,6 @@ postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => 
     }
 });
 
-postRouter.get("/tags", async (req, res) => {
-    try {
-        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
-        res.status(200).json({
-            Posts: posts
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
 /**
  * Gets a post by their id
  * Path Parameter
