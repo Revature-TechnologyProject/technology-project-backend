@@ -14,7 +14,7 @@ const mockPost1 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["rock", true], ["hip-hop", true]])
+    tags: {"rock": true, "hip-hop": true}
 };
 const mockPost2 = {
     class: CLASS_POST,
@@ -25,7 +25,7 @@ const mockPost2 = {
     title: "Title",
     replies: [],
     likedBy: [],
-    tags: new Map([["drill", true]])
+    tags: {"drill": true}
 };
 const mockReply1 = {
     itemID: "f2194fa8-afab-4ed0-9904-2d5af3142aff",
@@ -448,7 +448,7 @@ describe('Delete reply tests', () => {
 });
 describe('checkTags test', () => {
     it('Successful search on rock (inclusive)', async () => {
-        const tag = ["rock"];
+        const tag = "rock";
         let added = false;
 
         const result = await postService.checkTags(tag, 1);
@@ -456,7 +456,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Bad search on rap (inclusive)', async () => {
-        const tag = ["rap"];
+        const tag = "rap";
         let added = false;
 
         const result = await postService.checkTags(tag, 1);
@@ -464,7 +464,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Bad search on rock (non-inclusive)', async () => {
-        const tag = ["rock","rap"];
+        const tag = "rock,rap";
         let added = false;
 
         const result = await postService.checkTags(tag, 0);
@@ -472,7 +472,7 @@ describe('checkTags test', () => {
         expect(added).toBeTruthy();
     });
     it('Successful search on rock (non-inclusive)', async () => {
-        const tag = ["rock","hip-hop"];
+        const tag = "rock,hip-hop";
         let added = false;
 
         const result = await postService.checkTags(tag, 0);
