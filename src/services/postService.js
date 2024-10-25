@@ -9,7 +9,7 @@ const createPost = async (userId, description, score, title, tags) => {
             tagMap.set(i, true);
         }
     }
-    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, song: title, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
