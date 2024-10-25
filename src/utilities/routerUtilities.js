@@ -32,7 +32,7 @@ function validateBody(propertyName, isValidCallback, required = true) {
                 message: `Invalid property ${propertyName}`
             });
         }
-        if (propertyName == "username"){
+        if (exists && propertyName == "username"){
             if (req.body.username.length < 4){
                 return res.status(400).json({message: "Username must be at least 4 characters long"});
             }
@@ -40,7 +40,7 @@ function validateBody(propertyName, isValidCallback, required = true) {
                 return res.status(400).json({message: "Username must contain a letter or number"});
             }
         }
-        if (propertyName == "password"){
+        if (exists && propertyName == "password"){
             if (req.body.password.length < 6){
                 return res.status(400).json({message: "Password must be at least 6 characters long"});
             }
