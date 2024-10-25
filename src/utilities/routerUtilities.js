@@ -1,4 +1,4 @@
-const { isValidString } = require('../utilities/stringUtilities');
+const { isValidString } = require("./stringUtilities");
 
 function handleServiceError(error, res) {
     console.error(error);
@@ -11,19 +11,37 @@ function handleServiceError(error, res) {
     return res.status(statusCode).json({ message });
 }
 
-function isValidBodyProperty(req, res, propertyName) {
-    const property = req.body[propertyName];
+/*
+ summary: Returns a middleware function using specified params
+ parameters:
+    propertyName: The name of the property to check
+    isValidCallback: A callback function that takes the body param 
+        and returns a bool indicating if the value is valid 
+    required: If false, middleware will still pass even if property is not found
+*/
+function validateBody(propertyName, isValidCallback, required = true) {
+    return (req, res, next) => {
+        const param = req.body[propertyName];
+        const exists = propertyName in req.body;
+        if (!exists && required) {
+            return res.status(400).json({
+                message: `Missing required property ${propertyName}`
+            });
+        } else if (exists && !isValidCallback(param)) {
+            return res.status(400).json({
+                message: `Invalid property ${propertyName}`
+            });
+        }
+        next();
+    };
+}
 
-    if (!isValidString(property)) {
-        res.status(400).json({
-            message: `Invalid property ${propertyName}`
-        });
-        return false;
-    }
-    return true;
+function validateBodyString(propertyName, required = true) {
+    return validateBody(propertyName, (property) => isValidString(property), required);
 }
 
 module.exports = {
     handleServiceError,
-    isValidBodyProperty
+    validateBody,
+    validateBodyString
 };

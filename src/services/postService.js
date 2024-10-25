@@ -93,10 +93,7 @@ const seePosts = async () => {
 }
 
 const createReply = async (userId, postId, description) => {
-    const post = await postDAO.getPost(postId);
-    if (!post.Item) {
-        throw { status: 400, message: `Post ${postId} doesn't exist` };
-    }
+    await getPostById(postId);
     const reply = { itemID: uuid.v4(), postedBy: userId, description };
     const data = await postDAO.sendReply(postId, reply);
     throwIfError(data);
@@ -194,13 +191,13 @@ const checkTags = async (tagsList, inclusive) => {
 
 module.exports = {
     createPost,
-    updatePost,
-    getPostById,
-    updatePostFlag,
     getFlaggedPost,
-    seePosts,
     createReply,
+    getPostById,
+    seePosts,
     checkLike,
+    updatePost,
+    updatePostFlag,
     getReplyOfPost,
     deletePost,
     deleteReply,
