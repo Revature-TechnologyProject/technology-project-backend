@@ -22,10 +22,10 @@ postRouter.post("/", authMiddleware.authenticate(),
     async (req, res) => {
         //TODO check song title exists in API
         const userId = res.locals.user.itemID;
-        const { text, score, title, tags } = req.body;
+        const { text, score, title, song, tags } = req.body;
 
         try {
-            const post = await postService.createPost(userId, text, score, title, tags);
+            const post = await postService.createPost(userId, text, score, title, song, tags);
             res.status(201).json({
                 message: `Post successfully created`,
                 post
