@@ -165,7 +165,7 @@ const checkTags = async (tagsList, inclusive) => {
                 if (!post.tags){
                     break;
                 }
-                if (post.tags.hasOwnProperty(i)){
+                if (Object.hasOwn(post.tags, i)){
                     postSet.add(post);
                     break;
                 }
@@ -176,7 +176,7 @@ const checkTags = async (tagsList, inclusive) => {
         for (const post of posts.Items){
             let should = true;
             for (const i of tagsList){
-                if (!post.tags || !post.tags.hasOwnProperty(i)){
+                if (!post.tags || !Object.hasOwn(post.tags, i)){
                     should = false;
                     break;
                 }
