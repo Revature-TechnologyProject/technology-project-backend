@@ -4,7 +4,7 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const uuid = require("uuid");
 
-async function putUser(Item) {
+const putUser = async (Item) => {
     const command = new PutCommand({
         TableName,
         Item,
@@ -12,9 +12,9 @@ async function putUser(Item) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function queryByUsername(username) {
+const queryByUsername = async (username) => {
     const command = new QueryCommand({
         TableName,
         IndexName: UsernameIndex,
@@ -30,9 +30,9 @@ async function queryByUsername(username) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function getUserById(userId) {
+const getUserById = async (userId) => {
     const command = new GetCommand({
         TableName,
         Key: {
@@ -42,9 +42,9 @@ async function getUserById(userId) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function updateRole(id, role) {
+const updateRole = async (id, role) => {
     const command = new UpdateCommand({
         TableName,
         Key: {
@@ -87,7 +87,7 @@ async function updateUser(userId, requestBody) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
 const deleteUser = async (id) => {
     const command = new DeleteCommand({
@@ -95,7 +95,7 @@ const deleteUser = async (id) => {
         Key: { class: CLASS_USER, itemID: id }
     });
     await runCommand(command);
-}
+};
 
 async function uploadImage(imageBuffer, extension) {
     const parallelUploads3 = new Upload({

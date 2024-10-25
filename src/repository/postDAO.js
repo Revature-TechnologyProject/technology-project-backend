@@ -7,7 +7,7 @@ const sendPost = async (post) => {
         Item: post
     });
     return await runCommand(command);
-}
+};
 
 const scanPosts = async () => {
     const command = new ScanCommand({
@@ -19,67 +19,10 @@ const scanPosts = async () => {
         ExpressionAttributeValues: {
             ":class": CLASS_POST
         }
-    });
+    })
     const response = await runCommand(command);
     return response;
-}
-
-const sendReply = async (postId, reply) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: { "class": CLASS_POST, "itemID": postId },
-        ExpressionAttributeValues: {
-            ":reply": [reply]
-        },
-        UpdateExpression: "SET replies = list_append(replies, :reply)",
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
-}
-
-const sendLike = async (like, id) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: {"class": CLASS_POST, "itemID": id},
-        ExpressionAttributeValues: {
-            ":r": [like]
-        },
-        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
-}
-
-const removeLike = async (index, id) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: {"class": CLASS_POST, "itemID": id},
-        UpdateExpression: "REMOVE likedBy["+index+"]",
-        ReturnValues: "UPDATED_NEW"
-    });
-    return await runCommand(command);
-}
-
-const updatePost = async (id, attributes) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: {class: CLASS_POST, itemID: id},
-        UpdateExpression: "SET #description = :description, #score = :score, #title = :title, #isFlagged = :isFlagged",
-        ExpressionAttributeNames: {
-            "#description": "description",
-            "#score": "score",
-            "#title": "title",
-            "#isFlagged": "isFlagged" 
-        },
-        ExpressionAttributeValues: {
-            ":description": attributes.description,
-            ":title": attributes.title,
-            ":score": attributes.score,
-            ":isFlagged": attributes.isFlagged
-        }
-    })
-    return await runCommand(command);
-}
+};
 
 const getPost = async (postId) => {
     const command = new GetCommand({
@@ -87,22 +30,7 @@ const getPost = async (postId) => {
         Key: { class: CLASS_POST, itemID: postId }
     });
     return await runCommand(command);
-}
-
-const updatePostFlag = async (id, flag) => {
-    const command = new UpdateCommand({
-        TableName,
-        Key: {class: CLASS_POST, itemID: id},
-        UpdateExpression: "SET #isFlagged = :isFlagged",
-        ExpressionAttributeNames: {
-            "#isFlagged": "isFlagged" 
-        },
-        ExpressionAttributeValues: {
-            ":isFlagged": flag
-        }
-    })
-    return await runCommand(command);
-}
+};
 
 const getFlaggedPost = async (isFlagged) => {
     const command = new QueryCommand({
@@ -120,7 +48,56 @@ const getFlaggedPost = async (isFlagged) => {
     })
     const result = await runCommand(command);
     return result
-}
+};
+
+const updatePost = async (id, attributes) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { class: CLASS_POST, itemID: id },
+        UpdateExpression: "SET #description = :description, #score = :score, #title = :title, #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#description": "description",
+            "#score": "score",
+            "#title": "title",
+            "#isFlagged": "isFlagged"
+        },
+        ExpressionAttributeValues: {
+            ":description": attributes.description,
+            ":title": attributes.title,
+            ":score": attributes.score,
+            ":isFlagged": attributes.isFlagged
+        }
+    })
+    return await runCommand(command);
+};
+
+const sendReply = async (reply, postId) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": postId },
+        ExpressionAttributeValues: {
+            ":reply": [reply]
+        },
+        UpdateExpression: "SET replies = list_append(replies, :reply)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
+
+const updatePostFlag = async (id, flag) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { class: CLASS_POST, itemID: id },
+        UpdateExpression: "SET #isFlagged = :isFlagged",
+        ExpressionAttributeNames: {
+            "#isFlagged": "isFlagged"
+        },
+        ExpressionAttributeValues: {
+            ":isFlagged": flag
+        }
+    })
+    return await runCommand(command);
+};
 
 const updateReplies = async (postId, replies) => {
     const command = new UpdateCommand({
@@ -133,7 +110,30 @@ const updateReplies = async (postId, replies) => {
         ReturnValues: "UPDATED_NEW"
     });
     return await runCommand(command);
-}
+};
+
+const sendLike = async (like, id) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": id },
+        ExpressionAttributeValues: {
+            ":r": [like]
+        },
+        UpdateExpression: "SET likedBy = list_append(likedBy, :r)",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
+
+const removeLike = async (index, id) => {
+    const command = new UpdateCommand({
+        TableName,
+        Key: { "class": CLASS_POST, "itemID": id },
+        UpdateExpression: "REMOVE likedBy[" + index + "]",
+        ReturnValues: "UPDATED_NEW"
+    });
+    return await runCommand(command);
+};
 
 const deletePost = async (postId) => {
     const command = new DeleteCommand({
@@ -141,7 +141,7 @@ const deletePost = async (postId) => {
         Key: { class: CLASS_POST, itemID: postId }
     });
     return await runCommand(command);
-}
+};
 
 const getPostsByPostedBy = async (postedBy) => {
     const command = new QueryCommand({
@@ -162,14 +162,14 @@ const getPostsByPostedBy = async (postedBy) => {
 
 module.exports = {
     sendPost,
-    scanPosts,
     sendReply,
+    getPost,
+    scanPosts,
+    getFlaggedPost,
     sendLike,
     removeLike,
     updatePost,
-    getPost,
     updatePostFlag,
-    getFlaggedPost,
     updateReplies,
     deletePost,
     getPostsByPostedBy,
