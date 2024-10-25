@@ -154,7 +154,7 @@ userRouter.patch("/:userId/role", authMiddleware.adminAuthenticate(), validateBo
  *  400 - {message:"user not found with specified id", id: ${id}}
  *  401 - {message: "You are not the account owner"}
  */
-userRouter.patch("/:id/profile-image", authenticate, userMiddleware.validateUser, async (req, res) => {
+userRouter.patch("/:id/profile-image", authMiddleware.authenticate(), async (req, res) => {
     const {id} = req.params;
     const {itemID, role} = res.locals.user
     if (role !== "admin" && id !== itemID) {
