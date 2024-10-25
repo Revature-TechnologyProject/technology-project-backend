@@ -9,7 +9,7 @@ const createPost = async (userId, description, score, title, song, tags) => {
             tagMap.set(i, true);
         }
     }
-    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, song, replies: [], likedBy: [], tags: tagMap, isFlagged: 0 };
+    const post = { class: CLASS_POST, itemID: uuid.v4(), postedBy: userId, description, score, title, song, replies: [], likedBy: [], tags: tagMap, isFlagged: 0, time: Date.now() };
     const data = await postDAO.sendPost(post);
     throwIfError(data);
     delete(post.class);
@@ -151,20 +151,21 @@ const deleteReply = async (postId, replyId) => {
     throwIfError(data);
 }
 
-const checkTags = async (tags, inclusive) => {
+const checkTags = async (tagsList, inclusive) => {
     const posts = await postDAO.scanPosts();
     throwIfError(posts);
-    if (!tags){
+    if (tagsList == ""){
         return posts.Items;
     }
+    tagsList = tagsList.split(',');
     const postSet = new Set();
     if (inclusive == 1){
         for (const post of posts.Items){
-            for (const i of tags){
+            for (const i of tagsList){
                 if (!post.tags){
                     break;
                 }
-                if (post.tags.has(i)){
+                if (Object.hasOwn(post.tags, i)){
                     postSet.add(post);
                     break;
                 }
@@ -174,8 +175,8 @@ const checkTags = async (tags, inclusive) => {
     else {
         for (const post of posts.Items){
             let should = true;
-            for (const i of tags){
-                if (!post.tags || !post.tags.has(i)){
+            for (const i of tagsList){
+                if (!post.tags || !Object.hasOwn(post.tags, i)){
                     should = false;
                     break;
                 }
@@ -186,6 +187,12 @@ const checkTags = async (tags, inclusive) => {
         }
     }
     return [...postSet];
+}
+
+const getPostsByPostedBy = async (postedBy) => {
+    const result = await postDAO.getPostsByPostedBy(postedBy);
+    throwIfError(result);
+    return result.Items;
 }
 
 module.exports = {
@@ -200,5 +207,6 @@ module.exports = {
     getReplyOfPost,
     deletePost,
     deleteReply,
-    checkTags
+    checkTags,
+    getPostsByPostedBy,
 };

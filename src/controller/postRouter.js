@@ -76,17 +76,6 @@ postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => 
     }
 });
 
-postRouter.get("/tags", async (req, res) => {
-    try {
-        const posts = await postService.checkTags(req.query.tags, req.query.inclusive);
-        res.status(200).json({
-            Posts: posts
-        });
-    } catch (err) {
-        handleServiceError(err, res);
-    }
-});
-
 /**
  * Gets a post by their id
  * Path Parameter
@@ -113,7 +102,7 @@ postRouter.get("/:postId", async (req, res) => {
  *          posts - Array of retrieved posts
  */
 postRouter.get("/", async (req, res) => {
-    let isFlagged = req.query.isFlagged;
+    let {isFlagged, postedBy} = req.query;
     if (isFlagged !== undefined) {
         isFlagged = parseInt(isFlagged);
         // Since 0 is falsy we need to confirm its not 0
@@ -126,7 +115,14 @@ postRouter.get("/", async (req, res) => {
         } catch (err) {
             handleServiceError(err, res);
         }
-    } else {
+    } else if (postedBy !== undefined && postedBy !== "") {
+        try {
+            const posts = await postService.getPostsByPostedBy(postedBy);
+            return res.status(200).json({ posts });
+        } catch (err) {
+            handleServiceError(err, res);
+        }
+    }else {
         //TODO check song title exists in API
         try {
             const posts = await postService.seePosts();
@@ -134,6 +130,17 @@ postRouter.get("/", async (req, res) => {
         } catch (err) {
             handleServiceError(err, res);
         }
+    }
+});
+
+postRouter.get("/tags/search", async (req, res) => {
+    try {
+        const posts = await postService.checkTags(req.query.tags, req.query.inclusive.substring(0,1));
+        res.status(200).json({
+            Posts: posts
+        });
+    } catch (err) {
+        handleServiceError(err, res);
     }
 });
 
