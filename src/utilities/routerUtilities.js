@@ -32,6 +32,22 @@ function validateBody(propertyName, isValidCallback, required = true) {
                 message: `Invalid property ${propertyName}`
             });
         }
+        if (exists && propertyName == "username"){
+            if (req.body.username.length < 4){
+                return res.status(400).json({message: "Username must be at least 4 characters long"});
+            }
+            if (/[A-Za-z0-9]/.test(req.body.username)){
+                return res.status(400).json({message: "Username must contain a letter or number"});
+            }
+        }
+        if (exists && propertyName == "password"){
+            if (req.body.password.length < 6){
+                return res.status(400).json({message: "Password must be at least 6 characters long"});
+            }
+            if (!/[^A-Za-z0-9]/.test(req.body.password) || !/\d/.test(req.body.password)){
+                return res.status(400).json({message: "Password must contain a special character and a number"});
+            }
+        }
         next();
     };
 }
