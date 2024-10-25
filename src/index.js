@@ -28,5 +28,4 @@ app.use("/users", userRouter);
 app.use("/posts", postRouter);
 app.use("/songs", songRouter);
 
-
 server.listen(PORT, () => console.log(`Server listening on https://localhost:${PORT}`)); 
