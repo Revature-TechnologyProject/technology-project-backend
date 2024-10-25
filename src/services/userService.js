@@ -42,7 +42,21 @@ const login = async (username, password) => {
         status: 400,
         message: "Invalid username or password"
     }
-}
+};
+
+const getUserById = async (userId) => {
+    const result = await userDAO.getUserById(userId);
+    throwIfError(result);
+    const foundUser = result?.Item;
+    return foundUser;
+};
+
+const getUserByUsername = async (username) => {
+    const result = await userDAO.queryByUsername(username);
+    throwIfError(result);
+    const foundUser = result?.Items[0];
+    return foundUser;
+};
 
 const updateRole = async (id, role) => {
     const getUserResult = await userDAO.getUserById(id);
@@ -71,16 +85,9 @@ const updateRole = async (id, role) => {
     const updateResult = await userDAO.updateRole(id, role);
     throwIfError(updateResult);
     return updateResult;
-}
+};
 
-async function getUserById(userId) {
-    const result = await userDAO.getUserById(userId);
-    throwIfError(result);
-    const foundUser = result?.Item;
-    return foundUser;
-}
-
-async function updateUser(userId, requestBody) {
+const updateUser = async (userId, requestBody) => {
     const foundUser = await getUserById(userId);
 
     if (!foundUser) {
@@ -102,18 +109,22 @@ async function updateUser(userId, requestBody) {
 
     const result = await userDAO.updateUser(userId, requestBody);
     throwIfError(result);
-    const updatedUser = result?.Attributes;
-    return updatedUser;
+    const updatedUser = await userDAO.getUserById(userId);
+    throwIfError(updatedUser);
+    const updatedToken = createToken(updatedUser);
+    return {updatedUser, updatedToken};
 }
 
 const deleteUser = async (id) => {
     // Maybe add user exist check here, but not needed since dynamo wont error out with a not found id
     await userDAO.deleteUser(id);
-}
+};
 
 function createToken(user) {
     // Delete unneccesarry attributes as needed here
-    delete (user.password);
+    if (Object.hasOwn(user, "password")){
+        delete (user.password);
+    }
 
     const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1d" });
     return token;
@@ -122,8 +133,9 @@ function createToken(user) {
 module.exports = {
     register,
     login,
-    updateRole,
     getUserById,
+    getUserByUsername,
+    updateRole,
     updateUser,
     deleteUser
 };
