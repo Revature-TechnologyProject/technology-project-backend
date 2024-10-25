@@ -40,7 +40,7 @@ userRouter.post("/", validateBodyString("username"), validateBodyString("passwor
  *          token - JWT session token, expires after 1 day
  *      400 - Invalid username/password
  */
-userRouter.post("/login", validateBodyString("username"), validateBodyString("password"), async (req, res) => {
+userRouter.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
