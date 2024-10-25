@@ -12,7 +12,7 @@ let cert;
 try {
     key = fs.readFileSync("tech-project-key.pem");
     cert = fs.readFileSync("tech-project.pem");
-} catch (err) {
+} catch {
     console.log("One or more .pem files not found, using HTTP instead");
 }
 const options = {
