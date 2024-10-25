@@ -188,6 +188,12 @@ const checkTags = async (tags, inclusive) => {
     return [...postSet];
 }
 
+const getPostsByPostedBy = async (postedBy) => {
+    const result = await postDAO.getPostsByPostedBy(postedBy);
+    throwIfError(result);
+    return result.Items;
+}
+
 module.exports = {
     createPost,
     getFlaggedPost,
@@ -200,5 +206,6 @@ module.exports = {
     getReplyOfPost,
     deletePost,
     deleteReply,
-    checkTags
+    checkTags,
+    getPostsByPostedBy,
 };
