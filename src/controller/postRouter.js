@@ -19,10 +19,10 @@ const postRouter = express.Router();
 postRouter.post("/", authenticate, postMiddleware.validateTextBody, postMiddleware.validateScore, async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
-    const { text, score, song, artist, tags } = req.body;
+    const { text, score, title, tags } = req.body;
 
     try {
-        const post = await postService.createPost(userId, text, score, song, artist, tags);
+        const post = await postService.createPost(userId, text, score, title, tags);
         res.status(201).json({
             message: `Post successfully created`,
             post
@@ -58,6 +58,14 @@ postRouter.patch("/:postId", authenticate, async (req, res) => {
     }
 });
 
+/**
+ * Gets a post by their id
+ * Path Parameter
+ *      :postId {string}
+ * Response
+ *      200 - Successfully received the post by their id
+ *      400 - Post with id ${postId} not found
+ */
 postRouter.get("/:postId", async (req, res) => {
     const { postId } = req.params;
 
@@ -156,6 +164,14 @@ postRouter.patch("/:postId/likes", authenticate, postMiddleware.validateLike, as
     }
 });
 
+/**
+ * Deletes a post by their id
+ * Path Parameter
+ *      :postId {string}
+ * Response
+ *      200 - Successfully deleted the post by their id
+ *      400 - Post with id ${postId} not found
+ */
 postRouter.delete("/:postId", postOwnerOrAdminAuthenticate, async (req, res) => {
     const { postId } = req.params;
 

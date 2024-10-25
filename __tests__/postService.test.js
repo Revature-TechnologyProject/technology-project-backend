@@ -13,7 +13,7 @@ const mockPost1 = {
     postedBy: "95db201c-35bb-47d6-8634-8701a01f496a",
     description: "Hello world",
     score: 50,
-    song: "Title",
+    title: "Title",
     replies: [],
     likedBy: [],
     tags: new Map([["rock",true], ["hip-hop",true]])
@@ -24,7 +24,7 @@ const mockPost2 = {
     postedBy: "6d737a3b-d543-459b-aca6-d1f04952bf30",
     description: "This is a great song",
     score: 100,
-    song: "Title",
+    title: "Title",
     replies: [],
     likedBy: [],
     tags: new Map([["drill",true]])
