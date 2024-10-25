@@ -36,7 +36,7 @@ function validateBody(propertyName, isValidCallback, required = true) {
             if (req.body.username.length < 4){
                 return res.status(400).json({message: "Username must be at least 4 characters long"});
             }
-            if (/[A-Za-z0-9]/.test(req.body.username)){
+            if (!/[A-Za-z0-9]/.test(req.body.username)){
                 return res.status(400).json({message: "Username must contain a letter or number"});
             }
         }
