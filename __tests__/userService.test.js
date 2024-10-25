@@ -140,14 +140,11 @@ beforeAll(() => {
 beforeEach(() => {
     // Reset database
     mockDatabase.clear();
-    mockDatabase.set(mockUser1.username, mockUser1);
-    mockDatabase.set(mockUser2.username, mockUser2);
-    mockDatabase.set(mockUser3.username, mockUser3);
-    mockDatabase.set(mockAdmin.username, mockAdmin);
-    userDAO.putUser.mockClear();
-    userDAO.queryByUsername.mockClear();
-    userDAO.getUserById.mockClear();
-    userDAO.updateUser.mockClear();
+    mockDatabase.set(mockUser1.username, structuredClone(mockUser1));
+    mockDatabase.set(mockUser2.username, structuredClone(mockUser2));
+    mockDatabase.set(mockUser3.username, structuredClone(mockUser3));
+    mockDatabase.set(mockAdmin.username, structuredClone(mockAdmin));
+    jest.clearAllMocks();
 });
 
 describe("register", () => {

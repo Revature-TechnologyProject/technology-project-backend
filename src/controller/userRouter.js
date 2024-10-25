@@ -1,8 +1,7 @@
 const express = require('express');
 const userService = require('../services/userService');
-const userMiddleware = require('../middleware/userMiddleware');
-const {  authenticate, adminAuthenticate  } = require("../middleware/authMiddleware");
-const { handleServiceError } = require("../utilities/routerUtilities");
+const authMiddleware = require("../middleware/authMiddleware");
+const { handleServiceError, validateBodyString } = require("../utilities/routerUtilities");
 
 const userRouter = express.Router();
 
@@ -16,11 +15,11 @@ const userRouter = express.Router();
  *          data - The database entry of the new account without the password
  *      400 - Username already taken
  */
-userRouter.post("/", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
+userRouter.post("/", validateBodyString("username"), validateBodyString("password"), async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const {user, token} = await userService.register(username, password);
+        const { user, token } = await userService.register(username, password);
         res.status(201).json({
             message: "User successfully registered",
             user,
@@ -41,11 +40,11 @@ userRouter.post("/", userMiddleware.validateUsername, userMiddleware.validatePas
  *          token - JWT session token, expires after 1 day
  *      400 - Invalid username/password
  */
-userRouter.post("/login", userMiddleware.validateUsername, userMiddleware.validatePassword, async (req, res) => {
+userRouter.post("/login", validateBodyString("username"), validateBodyString("password"), async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const {token, user} = await userService.login(username, password);
+        const { token, user } = await userService.login(username, password);
         res.status(200).json({
             token,
             message: "Successfully logged in",
@@ -89,17 +88,13 @@ userRouter.get("/:userId", async (req, res) => {
  *      400 - User with id ${userId} not found
  *      401 - Unauthorized access - wrong user
  */
-userRouter.put("/:userId", authenticate, async (req, res) => {
-    const userId = req.params.userId;
+userRouter.put("/:userId", authMiddleware.accountOwnerAuthenticate(), async (req, res) => {
+    const { userId } = req.params;
     const requestBody = req.body;
 
-    if (userId !== res.locals.user.itemID) {
-        return res.status(401).json("Unauthorized access - wrong user");
-    }
-
     try {
-        const updatedUser = await userService.updateUser(userId, requestBody);
-        res.status(200).json({message: "User has been updated", updatedUser});
+        const { updatedUser, updatedToken } = await userService.updateUser(userId, requestBody);
+        res.status(200).json({ message: `User ${userId} has been updated`, updatedUser, updatedToken });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -108,16 +103,16 @@ userRouter.put("/:userId", authenticate, async (req, res) => {
 /**
  * Delete user from the database
  * Path Parameters
- *      :id {string}
+ *      :userId {string}
  * Response
  *      200 - Deleted user
  *          data - the id of the deleted user
  */
-userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
-    const { id } = req.params;
+userRouter.delete("/:userId", authMiddleware.adminAuthenticate(), async (req, res) => {
+    const { userId } = req.params;
     try {
-        await userService.deleteUser(id);
-        return res.status(200).json({message: "Deleted user", data: id});
+        await userService.deleteUser(userId);
+        return res.status(200).json({ message: "Deleted user", data: userId });
     } catch (err) {
         handleServiceError(err, res);
     }
@@ -126,21 +121,21 @@ userRouter.delete("/:id", adminAuthenticate, async (req, res) => {
 /**
  * Changes the role of a user
  * Path Parameters
- *      :id {string}
+ *      :userId {string}
  * Request Body
  *      role {string}
  * Response
  *      200 - User role changed to ${role}
- *      400 - User with id ${id} not found
+ *      400 - User with id ${userId} not found
  *      400 - User is already role ${role}
  *      400 - Cannot demote admin, use AWS console instead
  */
-userRouter.patch("/:id/role", userMiddleware.validateRole, adminAuthenticate, async (req, res) => {
-    const { id } = req.params;
+userRouter.patch("/:userId/role", authMiddleware.adminAuthenticate(), validateBodyString("role"), async (req, res) => {
+    const { userId } = req.params;
     const { role } = req.body;
     try {
-        await userService.updateRole(id, role);
-        return res.status(200).json({ message: `User role changed to ${role}` });
+        const token = await userService.updateRole(userId, role);
+        return res.status(200).json({ message: `User role changed to ${role}`, token });
     } catch (err) {
         handleServiceError(err, res);
     }
