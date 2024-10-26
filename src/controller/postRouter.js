@@ -171,7 +171,7 @@ postRouter.patch("/:postId/replies", authMiddleware.authenticate(), validateBody
     }
 });
 
-postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
+postRouter.put("/:postId/likes", authMiddleware.authenticate(),
     validateBody("like", (like) => !isNaN(like) && (like == 1 || like == -1)),
     async (req, res) => {
         //TODO check song title exists in API
