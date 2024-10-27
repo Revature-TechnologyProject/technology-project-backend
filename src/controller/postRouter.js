@@ -50,7 +50,7 @@ postRouter.post("/", authMiddleware.authenticate(),
  *      400 - provided description must be of type string
  *      400 - provided title must be of type string
  */
-postRouter.put("/:postId", authMiddleware.authenticate(), async (req, res) => {
+postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => {
     const { postId } = req.params;
     const { user } = res.locals;
     const userId = user.itemID;
@@ -154,7 +154,7 @@ postRouter.get("/tags/search", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.put("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
+postRouter.patch("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { postId } = req.params;
@@ -171,7 +171,7 @@ postRouter.put("/:postId/replies", authMiddleware.authenticate(), validateBodySt
     }
 });
 
-postRouter.put("/:postId/likes", authMiddleware.authenticate(),
+postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
     validateBody("like", (like) => !isNaN(like) && (like == 1 || like == -1)),
     async (req, res) => {
         //TODO check song title exists in API
