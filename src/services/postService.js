@@ -143,8 +143,6 @@ const deletePost = async (postId) => {
 }
 
 const deleteReply = async (postId, replyId) => {
-    await getReplyOfPost(postId, replyId);
-    
     const { replies } = await getPostById(postId);
     const newReplies = replies.filter((reply) => reply.itemID !== replyId); // tried using splice() but for some reason does not work
     const data = await postDAO.updateReplies(postId, newReplies);

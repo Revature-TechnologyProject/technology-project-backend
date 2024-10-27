@@ -16,16 +16,6 @@ const postOwnerOrAdminAuthenticate = () => {
     }, "Unauthorized access - Wrong User or Not Admin");
 }
 
-const replyOwnerOrAdminAuthenticate = () => {
-    return isAuthorized(async (user, req) => {
-        const userId = user.itemID;
-        const { postId, replyId } = req.params;
-
-        const foundReply = await postService.getReplyOfPost(postId, replyId);
-        return foundReply.postedBy === userId || user.role === "admin";
-    }, "Unauthorized access - Wrong User or Not Admin");
-}
-
 const accountOwnerAuthenticate = () => {
     return isAuthorized((user, req) => {
         const userId = req.params.userId;
@@ -77,7 +67,6 @@ function getToken(req) {
 module.exports = {
     authenticate,
     postOwnerOrAdminAuthenticate,
-    replyOwnerOrAdminAuthenticate,
     accountOwnerAuthenticate,
     postOwnerAuthenticate,
     adminAuthenticate
