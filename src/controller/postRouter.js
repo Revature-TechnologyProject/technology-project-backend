@@ -201,10 +201,15 @@ postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
  *      200 - Successfully deleted the post by their id
  *      400 - Post with id ${postId} not found
  */
-postRouter.delete("/:postId", authMiddleware.postOwnerOrAdminAuthenticate(), async (req, res) => {
+postRouter.delete("/:postId", authMiddleware.authenticate(), async (req, res) => {
     const { postId } = req.params;
 
     try {
+        const post = await postService.getPostById(postId); // Check if post exists
+        const {itemID, role} = res.locals.user;
+        if (!(post.postedBy === itemID || role === "admin")) {
+            return res.status(401).json({message: "Unauthorized access - Wrong User or Not Admin"})
+        }
         await postService.deletePost(postId);
         res.status(200).json({ message: "Deleted post", postId });
     } catch (err) {

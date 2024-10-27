@@ -136,8 +136,6 @@ const getReplyOfPost = async (postId, replyId) => {
 }
 
 const deletePost = async (postId) => {
-    await getPostById(postId);
-
     const deleteResult = await postDAO.deletePost(postId);
     throwIfError(deleteResult);
 }
