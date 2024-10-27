@@ -93,8 +93,7 @@ const seePosts = async () => {
 }
 
 const createReply = async (userId, postId, description) => {
-    const result = await getPostById(postId);
-    throwIfError(result);
+    await getPostById(postId);
     const reply = { itemID: uuid.v4(), postedBy: userId, description };
     const data = await postDAO.sendReply(postId, reply);
     throwIfError(data);
