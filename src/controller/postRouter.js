@@ -50,7 +50,7 @@ postRouter.post("/", authMiddleware.authenticate(),
  *      400 - provided description must be of type string
  *      400 - provided title must be of type string
  */
-postRouter.patch("/:postId", authMiddleware.authenticate(), async (req, res) => {
+postRouter.put("/:postId", authMiddleware.authenticate(), async (req, res) => {
     const { postId } = req.params;
     const { user } = res.locals;
     const userId = user.itemID;
