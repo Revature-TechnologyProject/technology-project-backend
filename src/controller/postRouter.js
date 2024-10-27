@@ -154,7 +154,7 @@ postRouter.get("/tags/search", async (req, res) => {
  *      200 - Reply successfully created
  *      400 - That post doesn't exist
  */
-postRouter.patch("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
+postRouter.put("/:postId/replies", authMiddleware.authenticate(), validateBodyString("text"), async (req, res) => {
     //TODO check song title exists in API
     const userId = res.locals.user.itemID;
     const { postId } = req.params;
