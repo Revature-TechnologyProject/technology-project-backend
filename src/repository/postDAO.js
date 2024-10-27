@@ -71,7 +71,7 @@ const updatePost = async (id, attributes) => {
     return await runCommand(command);
 };
 
-const sendReply = async (reply, postId) => {
+const sendReply = async (postId, reply) => {
     const command = new UpdateCommand({
         TableName,
         Key: { "class": CLASS_POST, "itemID": postId },
