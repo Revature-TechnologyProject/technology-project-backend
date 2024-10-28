@@ -201,10 +201,15 @@ postRouter.patch("/:postId/likes", authMiddleware.authenticate(),
  *      200 - Successfully deleted the post by their id
  *      400 - Post with id ${postId} not found
  */
-postRouter.delete("/:postId", authMiddleware.postOwnerOrAdminAuthenticate(), async (req, res) => {
+postRouter.delete("/:postId", authMiddleware.authenticate(), async (req, res) => {
     const { postId } = req.params;
 
     try {
+        const post = await postService.getPostById(postId); // Check if post exists
+        const {itemID, role} = res.locals.user;
+        if (!(post.postedBy === itemID || role === "admin")) {
+            return res.status(401).json({message: "Unauthorized access - Wrong User or Not Admin"})
+        }
         await postService.deletePost(postId);
         res.status(200).json({ message: "Deleted post", postId });
     } catch (err) {
@@ -221,10 +226,15 @@ postRouter.delete("/:postId", authMiddleware.postOwnerOrAdminAuthenticate(), asy
  *      200 - Successfully deleted the reply by their id
  *      400 - Post with id ${postId} not found or reply with id ${replyId} not found
  */
-postRouter.delete("/:postId/replies/:replyId", authMiddleware.replyOwnerOrAdminAuthenticate(), async (req, res) => {
+postRouter.delete("/:postId/replies/:replyId", authMiddleware.authenticate(), async (req, res) => {
     const { postId, replyId } = req.params;
 
     try {
+        const reply = await postService.getReplyOfPost(postId, replyId); // Check if reply exist, before trying to delete it
+        const {itemID, role} = res.locals.user;
+        if (!(reply.postedBy === itemID || role === "admin")) {
+            res.status(400).json({message: "Unauthorized access - Wrong User or Not Admin"});
+        }
         await postService.deleteReply(postId, replyId);
         res.status(200).json({ message: "Deleted reply", replyId });
     } catch (err) {

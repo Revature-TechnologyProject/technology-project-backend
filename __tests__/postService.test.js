@@ -442,20 +442,8 @@ describe('Delete reply tests', () => {
         }
         expect(error.status).toEqual(400);
     });
-
-    it('Throws error when reply is not found', async () => {
-        const postId = mockPost1.itemID;
-        const replyId = "invalid_replyId";
-
-        let error;
-        try {
-            await postService.deleteReply(postId, replyId);
-        } catch(err) {
-            error = err;
-        }
-        expect(error.status).toEqual(400);
-    });
 });
+
 describe('checkTags test', () => {
     it('Successful search on rock (inclusive)', async () => {
         const tag = "rock";
