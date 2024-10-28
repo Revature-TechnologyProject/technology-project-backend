@@ -27,8 +27,8 @@ const updatePost = async (id, post, attributes) => {
         error.message = "No updatable attributes provided. Must provide description, title, flag, or score in body (flag is not valid if you are the poster)";
         throw error
     }
-    if (score !== undefined && typeof(score) !== "number") {
-        error.message = "provided score must be of type number";
+    if (score !== undefined && typeof(score) !== "number" && score < 0 && score > 100) {
+        error.message = "provided score must be of type number 0-100";
         throw error;
     }
     if (description !== undefined && typeof(description) !== "string") {
