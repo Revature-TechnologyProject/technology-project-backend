@@ -93,8 +93,8 @@ userRouter.put("/:userId", authMiddleware.accountOwnerAuthenticate(), async (req
     const requestBody = req.body;
 
     try {
-        const { updatedUser, updatedToken } = await userService.updateUser(userId, requestBody);
-        res.status(200).json({ message: `User ${userId} has been updated`, updatedUser, updatedToken });
+        const { newUserInfo, updatedToken } = await userService.updateUser(userId, requestBody);
+        res.status(200).json({ message: `User ${userId} has been updated`, newUserInfo, updatedToken });
     } catch (err) {
         handleServiceError(err, res);
     }
