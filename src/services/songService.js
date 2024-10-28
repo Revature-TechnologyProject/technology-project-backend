@@ -85,7 +85,7 @@ function constructPageURL(query, offset) {
         return "";
     }
     // Maybe put the base url in a .env variable
-    let url = `http://localhost:3000/songs?type=track`;
+    let url = `http://localhost:3001/songs?type=track`;
     for (const key in query) {
         if (query[key] !== undefined) {
             url += `&${key}=${query[key]}`;

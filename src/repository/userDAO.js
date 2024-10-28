@@ -1,7 +1,10 @@
 const { PutCommand, QueryCommand, DeleteCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 const { TableName, UsernameIndex, CLASS_USER, runCommand } = require('../utilities/dynamoUtilities');
+const { Upload } = require("@aws-sdk/lib-storage");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const uuid = require("uuid");
 
-async function putUser(Item) {
+const putUser = async (Item) => {
     const command = new PutCommand({
         TableName,
         Item,
@@ -9,9 +12,9 @@ async function putUser(Item) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function queryByUsername(username) {
+const queryByUsername = async (username) => {
     const command = new QueryCommand({
         TableName,
         IndexName: UsernameIndex,
@@ -27,9 +30,9 @@ async function queryByUsername(username) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function getUserById(userId) {
+const getUserById = async (userId) => {
     const command = new GetCommand({
         TableName,
         Key: {
@@ -39,9 +42,9 @@ async function getUserById(userId) {
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
-async function updateRole(id, role) {
+const updateRole = async (id, role) => {
     const command = new UpdateCommand({
         TableName,
         Key: {
@@ -67,22 +70,24 @@ async function updateUser(userId, requestBody) {
             class: CLASS_USER,
             itemID: userId
         },
-        UpdateExpression: "set #username = :username, #bio = :bio, #genres = :genres",
+        UpdateExpression: "set #username = :username, #bio = :bio, #genres = :genres, #profileImage = :profileImage",
         ExpressionAttributeNames: {
             "#username": "username",
             "#bio": "bio",
-            "#genres": "genres"
+            "#genres": "genres",
+            "#profileImage": "profileImage",
         },
         ExpressionAttributeValues: {
             ":username": requestBody.username,
             ":bio": requestBody.bio,
-            ":genres": requestBody.genres
+            ":genres": requestBody.genres,
+            ":profileImage": requestBody.profileImage,
         },
         ReturnValues: "ALL_NEW"
     });
     const response = await runCommand(command);
     return response;
-}
+};
 
 const deleteUser = async (id) => {
     const command = new DeleteCommand({
@@ -90,6 +95,40 @@ const deleteUser = async (id) => {
         Key: { class: CLASS_USER, itemID: id }
     });
     await runCommand(command);
+};
+
+async function uploadImage(imageBuffer, extension) {
+    const parallelUploads3 = new Upload({
+        client: new S3Client({region: "us-east-2"}),
+        params: { Bucket: "techprojectmedia", Key: `images/${uuid.v4()}.${extension}`, Body: imageBuffer },
+        queueSize: 4,
+        partSize: 1024 * 1024 * 5,
+        leavePartsOnError: false,
+      });
+      parallelUploads3.on("httpUploadProgress", (progress) => {
+        console.log(progress);
+      });
+      try {
+        const {Location} = await parallelUploads3.done();
+        return {url: Location};
+      } catch {
+        // Some S3 error occured
+        return Promise.reject({status: 502, message: "Upstream server error"})
+      }
+}
+
+async function deleteImage(Key) {
+    const client = new S3Client({region: "us-east-2"});
+    const command = new DeleteObjectCommand({
+        Bucket: "techprojectmedia",
+        Key
+    });
+    try {
+        return await client.send(command);
+    } catch (err) {
+        console.log(err);
+        return Promise.reject({status: 502, message: "Upstream server error"});
+    }
 }
 
 module.exports = {
@@ -99,4 +138,6 @@ module.exports = {
     updateUser,
     updateRole,
     deleteUser,
+    uploadImage,
+    deleteImage,
 };
