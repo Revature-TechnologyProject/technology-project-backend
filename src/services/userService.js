@@ -117,8 +117,10 @@ const updateUser = async (userId, requestBody) => {
     throwIfError(result);
     const updatedUser = await userDAO.getUserById(userId);
     throwIfError(updatedUser);
-    const updatedToken = createToken(updatedUser);
-    return {updatedUser, updatedToken};
+    const newUserInfo = updatedUser.Item;
+    delete newUserInfo.password;
+    const updatedToken = createToken(newUserInfo);
+    return {newUserInfo, updatedToken};
 }
 
 const deleteUser = async (id) => {
